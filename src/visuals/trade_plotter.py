@@ -17,7 +17,7 @@ from visuals.plotting_utils import finalise_plot
 def plot_trade_cycle(
     df: pd.DataFrame,
     support_line: ScoredLine,
-    resistance_line: ScoredLine,
+    resistance_line: ScoredLine | None,
     plot_metadata: dict[str, Any],
 ) -> None:
     mask = (df.index >= plot_metadata["start_window"]) & (df.index <= plot_metadata["end_window"])

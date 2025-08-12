@@ -57,7 +57,7 @@ def backtest(product_id: str) -> float:
     for i in range(len(live_df)):
         if engine.trade_cycle_complete:
             logger.info(f"[{product_id}] Refreshing market analysis after trade cycle...")
-            if engine.state.buy_point and engine.state.sell_point:
+            if engine.state.buy_point and engine.state.sell_point and engine.state.support_line:
                 plot_metadata = {
                     "product_id": product_id,
                     "buy_point": engine.state.buy_point,

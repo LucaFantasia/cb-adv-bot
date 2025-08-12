@@ -93,7 +93,7 @@ class TrendAnalysis:
         q1 = int(num_candles * 0.25)
         q2 = int(num_candles * 0.50)
         q3 = int(num_candles * 0.75)
-        closes = self.df["Close"].values
+        closes = list((self.df["Close"].values).astype(float))
         extremas = sorted(self.maximas + self.minimas, key=lambda extrema: extrema[2])
         deviation_price = self.df["Close"].iloc[-1] * (self.deviation_pct)
 

@@ -6,6 +6,7 @@ Plots trend lines with volatility and deviation overlays
 
 import os
 from datetime import UTC, datetime
+from typing import Any
 
 import mplfinance as mpf
 import numpy as np
@@ -20,7 +21,7 @@ def plot_trend_line_overlays(
     line: ScoredLine,
     avg_volatility_pct: float,
     deviation_price: float,
-    plot_metadata: dict[str, str | bool],
+    plot_metadata: dict[str, Any],
 ) -> None:
     """
     Plots a candlestick chart with the trend line and markers for touches, soft touches, and breaks, as well as volatility overlays

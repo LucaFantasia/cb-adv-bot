@@ -22,8 +22,8 @@ class ScoredLine:
 
     line: TrendLine
     touches: list[int]
-    breaks: list[int] | None = None
-    soft_touches: list[int] | None = None
-    current_state: str | None = None
-    score: float | None = None
+    breaks: list[int] = []
+    soft_touches: list[int] = []
+    current_state: str = ""
+    score: float = 0.0
     score_components: dict[str, float] = field(default_factory=dict)

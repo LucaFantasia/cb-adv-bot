@@ -6,6 +6,7 @@ Plots generated support/resistance lines over a candlestick chart, with optional
 
 import os
 from datetime import UTC, datetime
+from typing import Any
 
 import mplfinance as mpf
 import pandas as pd
@@ -59,7 +60,7 @@ def plot_trend_lines(
 
 
 def plot_scored_lines(
-    df: pd.DataFrame, lines: list[ScoredLine], plot_metadata: dict[str, bool | str | int]
+    df: pd.DataFrame, lines: list[ScoredLine], plot_metadata: dict[str, Any]
 ) -> None:
     """
     Plots basic scored lines over a candlestick chart.

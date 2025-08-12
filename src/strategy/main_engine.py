@@ -3,6 +3,7 @@ main_engine.py
 """
 
 from datetime import datetime
+from typing import Any
 
 from models.scored_line import ScoredLine
 from strategy.line_evaluator import calc_sell_price, default_exit_price, is_near_line
@@ -29,7 +30,7 @@ class MainEngine:
         self.state = TradeState()
         self.logger = TradeLogger(product_id, start_window)
 
-    def on_candle(self, candle: dict[str, datetime | float | int]) -> None:
+    def on_candle(self, candle: dict[str, Any]) -> None:
         if candle["close"] is None:
             return
 
@@ -45,7 +46,7 @@ class MainEngine:
                         f"[BUY - {self.product_id}] on {candle['timestamp']} @ {candle['low']:.2f} (support: {proj_price:.2f})"
                     )
                     return
-        else:
+        elif self.state.buy_point:
             buy_price = self.state.buy_point[1]
             stop_price = buy_price * (1 - self.stop_loss_pct)
             if candle["low"] <= stop_price:

@@ -3,6 +3,7 @@ backtest_engine.py
 """
 
 from datetime import datetime, timedelta
+from typing import Any
 
 from models.scored_line import ScoredLine
 from settings.config import config
@@ -34,7 +35,7 @@ class BacktestEngine:
         self.state = TradeState()
         self.logger = TradeLogger(product_id, start_window)
 
-    def on_candle(self, candle: dict[str, datetime | float | int]) -> None:
+    def on_candle(self, candle: dict[str, Any]) -> None:
         if candle["close"] is None:
             return
 
@@ -44,7 +45,7 @@ class BacktestEngine:
                 if intersects_support_line(
                     candle["high"], candle["low"], proj_price, self.deviation_pct
                 ):
-                    self.state.open_posistion(candle["timestamp"], proj_price, support_line)
+                    self.state.open_position(candle["timestamp"], proj_price, support_line)
                     self.logger.record_trade(
                         "BUY", candle["timestamp"], proj_price, f"Support at @ {proj_price:.2f}"
                     )
@@ -60,7 +61,7 @@ class BacktestEngine:
                 self.trade_cycle_complete = True
                 return
 
-        else:
+        elif self.state.buy_point:
             buy_price = self.state.buy_point[1]
             stop_price = buy_price * (1 - self.stop_loss_pct)
             if candle["low"] <= stop_price:

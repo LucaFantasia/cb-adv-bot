@@ -8,6 +8,7 @@ Includes:
 
 import os
 from datetime import UTC, datetime
+from typing import Any
 
 import matplotlib.pyplot as plt
 import mplfinance as mpf
@@ -61,7 +62,7 @@ def plot_line_score_components(
 def plot_line_scoring_detections(
     df: pd.DataFrame,
     line: ScoredLine,
-    plot_metadata: dict[str, bool | str],
+    plot_metadata: dict[str, Any],
 ) -> None:
     """
     Plots a candlestick chart with the trend line and markers for touches, soft touches, and breaks.

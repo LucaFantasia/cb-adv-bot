@@ -26,7 +26,7 @@ class ProductClient(BaseClient):
 
     def _get_product_candles(
         self, product_id: str, start: datetime, end: datetime, granularity: str
-    ) -> list[list[float]]:
+    ) -> list[dict[str, Any]]:
         """
         Basic wrapper for Coinbase candle endpoint (max ~350 bars per request).
 
@@ -55,7 +55,7 @@ class ProductClient(BaseClient):
         end_time: datetime,
         granularity_mins: int,
         granularity_str: str,
-    ) -> list[list[float]]:
+    ) -> list[dict[str, Any]]:
         """
         Returns OHLCV data across multiple API calls if necessary.
 

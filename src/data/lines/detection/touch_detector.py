@@ -38,8 +38,8 @@ def detect_touches_for_line(
     """
     highs = df["High"].values
     lows = df["Low"].values
-    opens = df["Open"].values
-    closes = df["Close"].values
+    opens = list((df["Open"].values).astype(float))
+    closes = list((df["Close"].values).astype(float))
     body_highs = np.maximum(opens, closes)
     body_lows = np.minimum(opens, closes)
 

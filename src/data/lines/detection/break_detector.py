@@ -13,7 +13,7 @@ from settings.config import config
 def detect_breaks_for_line(
     line: ScoredLine,
     num_candles: int,
-    closes: np.ndarray,
+    closes: list[float],
     deviation_price: float,
     proj_prices: np.ndarray,
 ) -> ScoredLine:

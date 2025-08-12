@@ -6,6 +6,7 @@ Plots local maxima and minima points over a candlestick chart.
 
 import os
 from datetime import UTC, datetime
+from typing import Any
 
 import mplfinance as mpf
 import numpy as np
@@ -18,7 +19,7 @@ def plot_extrema(
     df: pd.DataFrame,
     maximas: list[tuple[str, float, int]],
     minimas: list[tuple[str, float, int]],
-    plot_metadata: dict[str, bool | str],
+    plot_metadata: dict[str, Any],
 ) -> None:
     """
     Plots a candlestick chart with extrema (high/low) points marked.

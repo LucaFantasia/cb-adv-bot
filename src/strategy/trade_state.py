@@ -15,7 +15,7 @@ class TradeState:
         self.support_line: ScoredLine | None = None
         self.resistance_line: ScoredLine | None = None
 
-    def open_posistion(self, ts: datetime, price: float, support_line: ScoredLine) -> None:
+    def open_position(self, ts: datetime, price: float, support_line: ScoredLine) -> None:
         self.position_open = True
         self.buy_point = (ts, price)
         self.support_line = support_line
