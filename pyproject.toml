@@ -15,7 +15,7 @@ dependencies = [
   "requests>=2.32",
   "PyJWT>=2.9",
   "cryptography>=43",
-  "mplfinance>=0.12",
+  "mplfinance==0.12.10b0",
   "websocket-client>=1.8"
 ]
 

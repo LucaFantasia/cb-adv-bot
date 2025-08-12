@@ -1,6 +1,7 @@
 README.md
 pyproject.toml
 src/__init__.py
+src/api/__init__.py
 src/api/account.py
 src/api/auth.py
 src/api/base.py
