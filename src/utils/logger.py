@@ -12,20 +12,19 @@ Access via: from utils.logger import logger
 import logging
 import os
 import sys
-import threading
 from datetime import datetime
 
-# Cross-platform sound function (uses winsound on Windows)
-try:
+if sys.platform == "win32":
     import winsound
+else:
+    winsound = None
 
-    def beep(frequency: int, duration: int) -> None:
-        threading.Thread(target=lambda: winsound.Beep(frequency, duration), daemon=True).start()
 
-except ImportError:
-
-    def beep(frequency: int, duration: int) -> None:
-        print("\a", end="", file=sys.stderr)
+def play_beep(frequency: int, duration: int) -> None:
+    if sys.platform == "win32" and winsound is not None:
+        winsound.Beep(frequency, duration)
+    else:
+        print("\a")
 
 
 class SoundHandler(logging.Handler):
@@ -41,7 +40,7 @@ class SoundHandler(logging.Handler):
         config = self.level_map.get(record.levelno)
         if config:
             frequency, duration = config
-            beep(frequency, duration)
+            play_beep(frequency, duration)
 
 
 # Global logger used across the bot
