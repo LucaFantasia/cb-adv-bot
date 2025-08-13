@@ -12,7 +12,7 @@ from datetime import UTC, datetime
 
 from websocket import WebSocket, WebSocketApp
 
-from utils.logger import logger
+from utils.logging_config import get_logger
 
 
 class WebSocketListener:
@@ -26,6 +26,7 @@ class WebSocketListener:
         self.reconnect_delay = 5.0
         self.ws: WebSocketApp | None = None
         self.stopped_flag = False
+        self.logger = get_logger(__name__)
 
     def stop(self) -> None:
         self.stopped_flag = True
@@ -35,7 +36,7 @@ class WebSocketListener:
     def on_open(self, ws: WebSocket) -> None:
         subscribe_msg = {"type": "subscribe", "channel": "ticker", "product_ids": [self.product_id]}
         ws.send(json.dumps(subscribe_msg))
-        logger.info(f"[WS - {self.product_id}] connected and subscribed.")
+        self.logger.info("connected", extra={"product_id": self.product_id})
 
     def _on_message(self, ws: WebSocket, raw_message: str) -> None:
         try:
@@ -45,7 +46,7 @@ class WebSocketListener:
 
             timestamp_str = data.get("timestamp") or data.get("time")
             if not timestamp_str:
-                logger.debug(f"[WS - {self.product_id}] missing timestamp")
+                self.logger.debug("missing timestamp", extra={"product_id": self.product_id})
                 return
 
             if timestamp_str.endsWith("Z"):
@@ -60,7 +61,9 @@ class WebSocketListener:
             events = data.get("events", [])
 
             if not isinstance(events, list):
-                logger.debug(f"[WS - {self.product_id}] malformed events: {events}")
+                self.logger.debug(
+                    "malformed events", extra={"product_id": self.product_id, "events": events}
+                )
                 return
 
             for event in events:
@@ -71,13 +74,17 @@ class WebSocketListener:
                             self.on_message(timestamp, price)
 
         except Exception as e:
-            logger.error(f"[WS - {self.product_id}] message parse error: {e}")
+            self.logger.error(
+                "message parse error", extra={"product_id": self.product_id, "error_message": e}
+            )
 
     def on_error(self, ws: WebSocket, err: str) -> None:
-        logger.error(f"[WS - {self.product_id}] error: {err}")
+        self.logger.error("error", extra={"product_id": self.product_id, "error_message": err})
 
     def on_close(self, ws: WebSocket, code: int, msg: str) -> None:
-        logger.info(f"[WS - {self.product_id}] closed: {code}, {msg}")
+        self.logger.info(
+            "closed", extra={"product_id": self.product_id, "code": code, "message": msg}
+        )
 
     def connect_and_listen(self) -> None:
         while not self.stopped_flag:
@@ -92,10 +99,13 @@ class WebSocketListener:
             try:
                 self.ws.run_forever(ping_interval=20, ping_timeout=10)
             except Exception as e:
-                logger.error(f"[WS - {self.product_id}] connection exception: {e}")
+                self.logger.error(
+                    "connection exception", extra={"product_id": self.product_id, "message": e}
+                )
 
             if not self.stopped_flag:
-                logger.info(
-                    f"[WS - {self.product_id}] reconnecting in {self.reconnect_delay:.1f}s..."
+                self.logger.info(
+                    f"reconnecting in {self.reconnect_delay:1f}s...",
+                    extra={"product_id": self.product_id},
                 )
                 time.sleep(self.reconnect_delay)

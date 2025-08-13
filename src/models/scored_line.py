@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from models.trend_line import TrendLine
 
 
-@dataclass
+@dataclass(slots=True)
 class ScoredLine:
     """
     Contains a trend line and its associated analysis results.
@@ -21,9 +21,9 @@ class ScoredLine:
     """
 
     line: TrendLine
-    touches: list[int]
-    breaks: list[int] = []
-    soft_touches: list[int] = []
+    touches: list[int] = field(default_factory=list)
+    breaks: list[int] = field(default_factory=list)
+    soft_touches: list[int] = field(default_factory=list)
     current_state: str = ""
     score: float = 0.0
     score_components: dict[str, float] = field(default_factory=dict)

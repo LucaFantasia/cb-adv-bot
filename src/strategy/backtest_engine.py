@@ -14,7 +14,7 @@ from strategy.line_evaluator import (
 )
 from strategy.trade_logger import TradeLogger
 from strategy.trade_state import TradeState
-from utils.logger import logger
+from utils.logging_config import get_logger
 
 
 class BacktestEngine:
@@ -33,7 +33,8 @@ class BacktestEngine:
         self.deviation_pct = deviation_pct
         self.trade_cycle_complete = False
         self.state = TradeState()
-        self.logger = TradeLogger(product_id, start_window)
+        self.trade_logger = TradeLogger(product_id, start_window)
+        self.logger = get_logger(__name__)
 
     def on_candle(self, candle: dict[str, Any]) -> None:
         if candle["close"] is None:
@@ -46,18 +47,26 @@ class BacktestEngine:
                     candle["high"], candle["low"], proj_price, self.deviation_pct
                 ):
                     self.state.open_position(candle["timestamp"], proj_price, support_line)
-                    self.logger.record_trade(
+                    self.trade_logger.record_trade(
                         "BUY", candle["timestamp"], proj_price, f"Support at @ {proj_price:.2f}"
                     )
-                    logger.info(
-                        f"[BUY - {self.product_id}] on {candle['timestamp']} estimated @ {proj_price:.2f} (support: {proj_price:.2f})"
+                    self.logger.info(
+                        "BUY signal",
+                        extra={
+                            "product_id": self.product_id,
+                            "signal": "line_breakout",
+                            "timestamp": candle["timestamp"],
+                            "price": proj_price,
+                        },
                     )
                     return
 
-            if candle["timestamp"] - self.logger.get_latest_trade_ts() >= timedelta(
+            if candle["timestamp"] - self.trade_logger.get_latest_trade_ts() >= timedelta(
                 days=config.backtest.candle_history_days
             ):
-                logger.info(f"[{self.product_id}] No activity, preparing for reanalysis...")
+                self.logger.info(
+                    "No activity, preparing for renalysis...", extra={"product_id": self.product_id}
+                )
                 self.trade_cycle_complete = True
                 return
 
@@ -67,12 +76,19 @@ class BacktestEngine:
             if candle["low"] <= stop_price:
                 self.state.close_position(candle["timestamp"], stop_price)
                 pct_loss = ((stop_price - buy_price) / buy_price) * 100
-                self.logger.append_return(pct_loss)
-                self.logger.record_trade(
+                self.trade_logger.append_return(pct_loss)
+                self.trade_logger.record_trade(
                     "SELL", candle["timestamp"], stop_price, f"STOP LOSS: {pct_loss:.2f}%"
                 )
-                logger.info(
-                    f"[SELL - {self.product_id}] STOP on {candle['timestamp']} @ {stop_price:.2f}, loss: {pct_loss:.2f}%"
+                self.logger.info(
+                    "SELL signal",
+                    extra={
+                        "product_id": self.product_id,
+                        "signal": "stop_loss",
+                        "timestamp": candle["timestamp"],
+                        "price": stop_price,
+                        "pct_loss": pct_loss,
+                    },
                 )
                 self.trade_cycle_complete = True
                 return
@@ -84,12 +100,19 @@ class BacktestEngine:
                     if candle["high"] >= sell_price:
                         self.state.close_position(candle["timestamp"], sell_price, resistance_line)
                         pct_gain = ((sell_price - buy_price) / buy_price) * 100
-                        self.logger.append_return(pct_gain)
-                        self.logger.record_trade(
+                        self.trade_logger.append_return(pct_gain)
+                        self.trade_logger.record_trade(
                             "SELL", candle["timestamp"], sell_price, f"PROFIT: {pct_gain:.2f}%"
                         )
-                        logger.info(
-                            f"[SELL - {self.product_id}] GAIN on {candle['timestamp']} @ {sell_price:.2f}, profit: {pct_gain:.2f}%"
+                        self.logger.info(
+                            "SELL signal",
+                            extra={
+                                "product_id": self.product_id,
+                                "signal": "line_breakout",
+                                "timestamp": candle["timestamp"],
+                                "price": sell_price,
+                                "pct_gain": pct_gain,
+                            },
                         )
                         self.trade_cycle_complete = True
                         return
@@ -98,12 +121,19 @@ class BacktestEngine:
                 if candle["high"] >= fallback_price:
                     self.state.close_position(candle["timestamp"], fallback_price)
                     pct_gain = ((fallback_price - buy_price) / buy_price) * 100
-                    self.logger.append_return(pct_gain)
-                    self.logger.record_trade(
+                    self.trade_logger.append_return(pct_gain)
+                    self.trade_logger.record_trade(
                         "SELL", candle["timestamp"], fallback_price, f"PROFIT: {pct_gain:.2f}%"
                     )
-                    logger.info(
-                        f"[SELL - {self.product_id}] GAIN on {candle['timestamp']} @ {fallback_price}, profit: {pct_gain:.2f}%"
+                    self.logger.info(
+                        "SELL signal",
+                        extra={
+                            "product_id": self.product_id,
+                            "signal": "line_breakout",
+                            "timestamp": candle["timestamp"],
+                            "price": fallback_price,
+                            "pct_gain": pct_gain,
+                        },
                     )
                     self.trade_cycle_complete = True
                     return
@@ -113,7 +143,7 @@ class BacktestEngine:
         self.trade_cycle_complete = False
 
     def export_trades(self) -> None:
-        self.logger.export_to_csv()
+        self.trade_logger.export_to_csv()
 
     def get_avg_return(self) -> float:
-        return float(self.logger.get_avg_return())
+        return float(self.trade_logger.get_avg_return())

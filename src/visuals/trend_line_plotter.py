@@ -6,6 +6,7 @@ Plots generated support/resistance lines over a candlestick chart, with optional
 
 import os
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import mplfinance as mpf
@@ -48,14 +49,11 @@ def plot_trend_lines(
         warn_too_much_data=1500,
     )
 
+    base_dir = Path(os.getenv("CHARTS_DIR", "charts"))
+    out_dir = base_dir / "lines" / f"{product_id}"
+    out_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S")
-    filename = f"{product_id}_TREND_LINES_{timestamp}"
-    path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "charts", "lines", f"{product_id}")
-    )
-    os.makedirs(path, exist_ok=True)
-    full_path = os.path.join(path, filename)
-
+    full_path = out_dir / f"TREND_LINES_{timestamp}.png"
     finalise_plot(figure, save, show, full_path)
 
 
@@ -94,23 +92,14 @@ def plot_scored_lines(
         warn_too_much_data=1500,
     )
 
+    base_dir = Path(os.getenv("CHARTS_DIR", "charts"))
+    out_dir = base_dir / "lines" / f"{plot_metadata['product_id']}"
+    out_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S")
     filename = (
-        f"{plot_metadata['product_id']}_SCORED_LINES_{plot_metadata['trade_count']}"
+        f"SCORED_LINES_{plot_metadata['trade_count']}.png"
         if plot_metadata["trade_count"]
-        else f"{plot_metadata['product_id']}_SCORED_LINES_{timestamp}"
+        else f"SCORED_LINES_{timestamp}.png"
     )
-    path = os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "..",
-            "charts",
-            "lines",
-            f"{plot_metadata['product_id']}",
-        )
-    )
-    os.makedirs(path, exist_ok=True)
-    full_path = os.path.join(path, filename)
-
+    full_path = out_dir / filename
     finalise_plot(figure, plot_metadata["save"], plot_metadata["show"], full_path)

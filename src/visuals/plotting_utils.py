@@ -1,8 +1,11 @@
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+from tpying import Optional
 
 
-def finalise_plot(fig: Figure, save: bool, show: bool, path: str | None = None) -> None:
+def finalise_plot(fig: Figure, save: bool, show: bool, path: Optional[Path] = None) -> None:
     """
     Handles save/show logic for all plot types to ensure consistency across visuals.
 

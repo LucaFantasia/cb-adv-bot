@@ -11,12 +11,19 @@ from data.analysis.trend_analysis import TrendAnalysis
 from data.structure.candle_loader import candles_to_dataframe
 from settings.config import config
 from strategy.backtest_engine import BacktestEngine
-from utils.logger import logger
+from utils.logging_config import get_logger, setup_logging
 from visuals.trade_plotter import plot_trade_cycle
 from visuals.trend_line_plotter import plot_scored_lines
 
+from .backtest_bootstrap import prepare_backtest_run_dirs
+
+paths = prepare_backtest_run_dirs()
+setup_logging()
+logger = get_logger(__name__)
+
 
 def main() -> None:
+    logger.info("starting backtest", extra=paths)
     for product_id in ["BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD"]:
         avg_return = backtest(product_id)
         print(f"\n{product_id} average return: {avg_return}\n")
@@ -26,6 +33,7 @@ def main() -> None:
 
 
 def backtest(product_id: str) -> float:
+    logger = get_logger(__name__)
     client = ProductClient()
     trend_analysis = TrendAnalysis(client, product_id, config.backtest.current_time)
     trend_analysis.run()
@@ -56,13 +64,15 @@ def backtest(product_id: str) -> float:
 
     for i in range(len(live_df)):
         if engine.trade_cycle_complete:
-            logger.info(f"[{product_id}] Refreshing market analysis after trade cycle...")
+            logger.info(
+                "Refreshing market analysis after trade cycle...", extra={"product_id": product_id}
+            )
             if engine.state.buy_point and engine.state.sell_point and engine.state.support_line:
                 plot_metadata = {
                     "product_id": product_id,
                     "buy_point": engine.state.buy_point,
                     "sell_point": engine.state.sell_point,
-                    "start_window": engine.logger.start_window,
+                    "start_window": engine.trade_logger.start_window,
                     "end_window": live_df.index[i],
                     "trade_count": trade_count,
                 }
@@ -88,7 +98,7 @@ def backtest(product_id: str) -> float:
             engine.resistance_lines = trend_analysis.best_resistance_lines
             engine.stop_loss_pct = trend_analysis.avg_volatility_pct / 2
             engine.deviation_pct = trend_analysis.deviation_pct
-            engine.logger.start_window = trend_analysis.current_time - timedelta(
+            engine.trade_logger.start_window = trend_analysis.current_time - timedelta(
                 days=config.candle.candle_history_days
             )
             config.backtest.base_time = trend_analysis.current_time - timedelta(

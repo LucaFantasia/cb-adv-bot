@@ -15,7 +15,7 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
-from utils.logger import logger
+from utils.logging_config import get_logger
 
 from .auth import JWTAuth
 
@@ -32,6 +32,7 @@ class BaseClient:
         self.host = os.getenv("CB_HOST_NAME")
         self.api_path = os.getenv("CB_API_PATH")
         self.session = requests.Session()
+        self.logger = get_logger(__name__)
 
     def _headers(self, method: str, query: str) -> dict[str, str]:
         uri = f"{method} {self.host}{self.api_path}{query}"
@@ -47,17 +48,23 @@ class BaseClient:
         response = self.session.get(url, headers=headers, params=params)
 
         if not response.ok:
-            logger.error(f"[GET] {url} failed: {response.status_code} - {response.text}")
+            self.logger.error(
+                "Failed GET request",
+                extra={"url": url, "status_code": response.status_code, "text": response.text},
+            )
             return None
         return response.json()
 
-    def post(self, query: str, body: dict[str, Any] | None) -> Any | None:
+    def post(self, query: str, body: dict[str, Any] | None = None) -> Any | None:
         url = self._url(query)
         headers = self._headers("POST", query)
         payload = json.dumps(body) if body else ""
         response = self.session.post(url, headers=headers, data=payload)
 
         if not response.ok:
-            logger.error(f"[POST] {url} failed: {response.status_code} - {response.text}")
+            self.logger.error(
+                "Failed POST request",
+                extra={"url": url, "status_code": response.status_code, "text": response.text},
+            )
             return None
         return response.json()

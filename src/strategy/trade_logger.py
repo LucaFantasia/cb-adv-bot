@@ -3,7 +3,8 @@ trade_logger.py
 """
 
 import csv
-from datetime import datetime, timedelta
+import os
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 
@@ -40,10 +41,11 @@ class TradeLogger:
         if not self.trade_log:
             return
 
-        project_root = Path(__file__).resolve().parents[2]
-        out_path = project_root / "sheets" / self.product_id / "TRADES.csv"
-        path = Path(out_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
+        base_dir = Path(os.getenv("SHEETS_DIR", "sheets"))
+        out_dir = base_dir / f"{self.product_id}"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S")
+        path = out_dir / f"{timestamp}.csv"
 
         write_header = not path.exists()
         fieldnames = list(self.trade_log[0].keys())

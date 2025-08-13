@@ -6,6 +6,7 @@ Provides functions to render basic candlestick charts using mplfinance, with opt
 
 import os
 from datetime import UTC, datetime
+from pathlib import Path
 
 import mplfinance as mpf
 import pandas as pd
@@ -34,12 +35,9 @@ def plot_candles(df: pd.DataFrame, save: bool, show: bool, product_id: str) -> N
         warn_too_much_data=1500,
     )
 
+    base_dir = Path(os.getenv("CHARTS_DIR", "charts"))
+    out_dir = base_dir / "candles" / f"{product_id}"
+    out_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S")
-    filename = f"{product_id}_CANDLES_{timestamp}"
-    path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "charts", "candles", f"{product_id}")
-    )
-    os.makedirs(path, exist_ok=True)
-    full_path = os.path.join(path, filename)
-
+    full_path = out_dir / f"{timestamp}.png"
     finalise_plot(figure, save, show, full_path)

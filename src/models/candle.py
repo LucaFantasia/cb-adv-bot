@@ -28,4 +28,4 @@ class Candle:
     high: float
     low: float
     close: float
-    volume: float | None = None
+    volume: float | None

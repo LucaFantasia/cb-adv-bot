@@ -1,1 +1,0 @@
-2025-08-11 14:39:40,555    ERROR  trading_bot: [GET] https://api.coinbase.com/api/v3/brokerage/products/BTC-USD/candles failed: 401 - Unauthorized

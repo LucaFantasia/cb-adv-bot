@@ -9,7 +9,7 @@ from models.scored_line import ScoredLine
 from strategy.line_evaluator import calc_sell_price, default_exit_price, is_near_line
 from strategy.trade_logger import TradeLogger
 from strategy.trade_state import TradeState
-from utils.logger import logger
+from utils.logging_config import get_logger
 
 
 class MainEngine:
@@ -28,7 +28,8 @@ class MainEngine:
         self.deviation_pct = deviation_pct
         self.trade_cycle_complete = False
         self.state = TradeState()
-        self.logger = TradeLogger(product_id, start_window)
+        self.trade_logger = TradeLogger(product_id, start_window)
+        self.logger = get_logger(__name__)
 
     def on_candle(self, candle: dict[str, Any]) -> None:
         if candle["close"] is None:
@@ -39,11 +40,17 @@ class MainEngine:
                 proj_price = support_line.line.project_price(candle["index"])
                 if is_near_line(candle["low"], proj_price, self.deviation_pct):
                     self.state.open_position(candle["timestamp"], candle["low"], support_line)
-                    self.logger.record_trade(
+                    self.trade_logger.record_trade(
                         "BUY", candle["timestamp"], candle["low"], f"Support at @ {proj_price:.2f}"
                     )
-                    logger.info(
-                        f"[BUY - {self.product_id}] on {candle['timestamp']} @ {candle['low']:.2f} (support: {proj_price:.2f})"
+                    self.logger.info(
+                        "BUY signal",
+                        extra={
+                            "product_id": self.product_id,
+                            "signal": "line_breakout",
+                            "timestamp": candle["timestamp"],
+                            "price": candle["low"],
+                        },
                     )
                     return
         elif self.state.buy_point:
@@ -52,11 +59,18 @@ class MainEngine:
             if candle["low"] <= stop_price:
                 self.state.close_position(candle["timestamp"], candle["low"])
                 pct_loss = ((candle["low"] - buy_price) / buy_price) * 100
-                self.logger.record_trade(
+                self.trade_logger.record_trade(
                     "SELL", candle["timestamp"], candle["low"], f"STOP LOSS: {pct_loss:.2f}%"
                 )
-                logger.info(
-                    f"[SELL - {self.product_id}] STOP on {candle['timestamp']} @ {candle['low']:.2f}, loss: {pct_loss:.2f}%"
+                self.logger.info(
+                    "SELL signal",
+                    extra={
+                        "product_id": self.product_id,
+                        "signal": "stop_loss",
+                        "timestamp": candle["timestamp"],
+                        "price": candle["low"],
+                        "pct_loss": pct_loss,
+                    },
                 )
                 self.state.reset()
                 return
@@ -70,11 +84,18 @@ class MainEngine:
                             candle["timestamp"], candle["high"], resistance_line
                         )
                         pct_gain = ((candle["high"] - buy_price) / buy_price) * 100
-                        self.logger.record_trade(
+                        self.trade_logger.record_trade(
                             "SELL", candle["timestamp"], candle["high"], f"PROFIT: {pct_gain:.2f}%"
                         )
-                        logger.info(
-                            f"[SELL - {self.product_id}] GAIN on {candle['timestamp']} @ {candle['high']:.2f}, profit: {pct_gain:.2f}%"
+                        self.logger.info(
+                            "SELL signal",
+                            extra={
+                                "product_id": self.product_id,
+                                "signal": "line_breakout",
+                                "timestamp": candle["timestamp"],
+                                "price": candle["high"],
+                                "pct_gain": pct_gain,
+                            },
                         )
                         self.state.reset()
                         return
@@ -83,14 +104,21 @@ class MainEngine:
                 if candle["high"] >= fallback_price:
                     self.state.close_position(candle["timestamp"], candle["high"])
                     pct_gain = ((candle["high"] - buy_price) / buy_price) * 100
-                    self.logger.record_trade(
+                    self.trade_logger.record_trade(
                         "SELL", candle["timestamp"], candle["high"], f"PROFIT: {pct_gain:.2f}%"
                     )
-                    logger.info(
-                        f"[SELL - {self.product_id}] GAIN on {candle['timestamp']} @ {candle['high']}, profit: {pct_gain:.2f}%"
+                    self.logger.info(
+                        "SELL signal",
+                        extra={
+                            "product_id": self.product_id,
+                            "signal": "line_breakout",
+                            "timestamp": candle["timestamp"],
+                            "price": candle["high"],
+                            "pct_gain": pct_gain,
+                        },
                     )
                     self.state.reset()
                     return
 
     def export_trades(self) -> None:
-        self.logger.export_to_csv()
+        self.trade_logger.export_to_csv()

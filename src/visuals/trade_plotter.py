@@ -3,6 +3,7 @@ trade_plotter.py
 """
 
 import os
+from pathlib import Path
 from typing import Any
 
 import mplfinance as mpf
@@ -62,18 +63,8 @@ def plot_trade_cycle(
         warn_too_much_data=1500,
     )
 
-    filename = f"{plot_metadata['product_id']}_TRADE_{plot_metadata['trade_count']}"
-    path = os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "..",
-            "charts",
-            "trades",
-            f"{plot_metadata['product_id']}",
-        )
-    )
-    os.makedirs(path, exist_ok=True)
-    full_path = os.path.join(path, filename)
-
+    base_dir = Path(os.getenv("CHARTS_DIR", "charts"))
+    out_dir = base_dir / "trades" / f"{plot_metadata['product_id']}"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    full_path = out_dir / f"{plot_metadata['trade_count']}.png"
     finalise_plot(figure, True, False, full_path)

@@ -6,6 +6,7 @@ Plots trend lines with volatility and deviation overlays
 
 import os
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import mplfinance as mpf
@@ -107,20 +108,12 @@ def plot_trend_line_overlays(
         warn_too_much_data=1500,
     )
 
+    base_dir = Path(os.getenv("CHARTS_DIR", "charts"))
+    out_dir = base_dir / "overlays" / f"{plot_metadata['product_id']}"
+    out_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S")
     line_state_caps = "RESISTANCE" if line.current_state == "resistance" else "SUPPORT"
-    filename = f"{plot_metadata['product_id']}_{line_state_caps}_LINE_{plot_metadata['line_number']}_SCORE_DETECTIONS_{timestamp}"
-    path = os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "..",
-            "charts",
-            "scores",
-            f"{plot_metadata['product_id']}",
-        )
+    full_path = (
+        out_dir / f"{line_state_caps}_LINE_{plot_metadata['line_number']}_OVERLAY_{timestamp}.png"
     )
-    os.makedirs(path, exist_ok=True)
-    full_path = os.path.join(path, filename)
-
     finalise_plot(figure, plot_metadata["save"], plot_metadata["show"], full_path)
