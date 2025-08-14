@@ -1,15 +1,12 @@
 from __future__ import annotations
 
 import enum
-from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Annotated
-
-if TYPE_CHECKING:
-    from pathlib import Path
-
 import os
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Annotated
 
-import typer
+from typer import Option, Typer
 
 from runners.backtest_runner import main as backtest_run
 from runners.best_line_runner import main as best_line_run
@@ -21,7 +18,7 @@ from runners.metrics_runner import main as metrics_run
 from runners.scored_line_runner import main as scored_line_run
 from runners.trend_line_runner import main as trend_line_run
 
-app = typer.Typer(help="Coinbase Advanced Bot runners")
+app = Typer(help="Coinbase Advanced Bot runners")
 
 
 class Product(enum.Enum):
@@ -33,14 +30,16 @@ class Product(enum.Enum):
 
 def _init(
     log_level: Annotated[
-        str, typer.Option("--log-level", envvar="LOG_LEVEL", help="Console log level")
+        str, Option("--log-level", envvar="LOG_LEVEL", help="Console log level")
     ] = "INFO",
     log_file: Annotated[
-        Path | None,
-        typer.Option("--log-file", envvar="LOG_FILE", help="Optional rotating log file path"),
+        str | None,
+        Option(
+            "--log-file", envvar="LOG_FILE", help="Optional rotating log file path", path_type=Path
+        ),
     ] = None,
     log_file_level: Annotated[
-        str, typer.Option("--log-file-level", envvar="LOG_FILE_LEVEL", help="File log level")
+        str, Option("--log-file-level", envvar="LOG_FILE_LEVEL", help="File log level")
     ] = "INFO",
 ) -> None:
     if log_file:
@@ -55,8 +54,8 @@ app.callback()(_init)
 
 def candles(
     product: Product = Product.BTC,
-    show: Annotated[bool, typer.Option("--show/--no-show")] = False,
-    save: Annotated[bool, typer.Option("--save/--no-save")] = False,
+    show: Annotated[bool, Option("--show/--no-show")] = False,
+    save: Annotated[bool, Option("--save/--no-save")] = False,
 ) -> None:
     candle_run(product.value, bool(show), bool(save))
 
@@ -66,8 +65,8 @@ app.command(help="Build candles dataframe and plot/save if requested")(candles)
 
 def extrema(
     product: Product = Product.BTC,
-    show: Annotated[bool, typer.Option("--show/--no-show")] = False,
-    save: Annotated[bool, typer.Option("--save/--no-save")] = False,
+    show: Annotated[bool, Option("--show/--no-show")] = False,
+    save: Annotated[bool, Option("--save/--no-save")] = False,
 ) -> None:
     extrema_run(product.value, bool(show), bool(save))
 
@@ -77,8 +76,8 @@ app.command(help="Extrema detector")(extrema)
 
 def trend_lines(
     product: Product = Product.BTC,
-    show: Annotated[bool, typer.Option("--show/--no-show")] = False,
-    save: Annotated[bool, typer.Option("--save/--no-save")] = False,
+    show: Annotated[bool, Option("--show/--no-show")] = False,
+    save: Annotated[bool, Option("--save/--no-save")] = False,
 ) -> None:
     trend_line_run(product.value, bool(show), bool(save))
 
@@ -88,8 +87,8 @@ app.command(help="Trend lines and plots")(trend_lines)
 
 def scored_lines(
     product: Product = Product.BTC,
-    show: Annotated[bool, typer.Option("--show/--no-show")] = False,
-    save: Annotated[bool, typer.Option("--save/--no-save")] = False,
+    show: Annotated[bool, Option("--show/--no-show")] = False,
+    save: Annotated[bool, Option("--save/--no-save")] = False,
 ) -> None:
     scored_line_run(product.value, bool(show), bool(save))
 
@@ -99,8 +98,8 @@ app.command(help="Scored lines and plots")(scored_lines)
 
 def metrics(
     product: Product = Product.BTC,
-    show: Annotated[bool, typer.Option("--show/--no-show")] = False,
-    save: Annotated[bool, typer.Option("--save/--no-save")] = False,
+    show: Annotated[bool, Option("--show/--no-show")] = False,
+    save: Annotated[bool, Option("--save/--no-save")] = False,
 ) -> None:
     metrics_run(product.value, bool(show), bool(save))
 
@@ -111,10 +110,10 @@ app.command(help="Overlays and diagnostics visualisation")(metrics)
 def best_line(
     product: Product = Product.BTC,
     current_time: Annotated[
-        datetime | None, typer.Option("--current_time", help="ISO8601, e.g. 2024-01-01T00:00:00")
+        datetime | None, Option("--current_time", help="ISO8601, e.g. 2024-01-01T00:00:00")
     ] = None,
-    show: Annotated[bool, typer.Option("--show/--no-show")] = False,
-    save: Annotated[bool, typer.Option("--save/--no-save")] = False,
+    show: Annotated[bool, Option("--show/--no-show")] = False,
+    save: Annotated[bool, Option("--save/--no-save")] = False,
 ) -> None:
     best_line_run(
         product.value,
