@@ -15,13 +15,12 @@ def prepare_backtest_run_dirs(run_name: str | None = None) -> dict[str, str]:
         d.mkdir(parents=True, exist_ok=True)
 
     # Set env vars BEFORE logger setup
-    os.environ.setdefault("RUN_TAG", run_dir.name)
-    os.environ.setdefault("LOG_FILE", str(logs_dir / "run.log"))
-    os.environ.setdefault("LOG_FORMAT", "json")
+    os.environ["RUN_TAG"] = run_dir.name
+    os.environ["LOG_FILE"] = str(logs_dir / "run.log")
+    os.environ["LOG_FORMAT"] = "json"
 
-    # optional: make these discoverable elsewhere in code
-    os.environ.setdefault("CHARTS_DIR", str(charts_dir))
-    os.environ.setdefault("SHEETS_DIR", str(sheets_dir))
+    os.environ["CHARTS_DIR"] = str(charts_dir)
+    os.environ["SHEETS_DIR"] = str(sheets_dir)
 
     return {
         "run_dir": str(run_dir),

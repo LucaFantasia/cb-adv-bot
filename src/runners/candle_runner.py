@@ -2,7 +2,6 @@
 candle_runner.py — Visual inspection of raw OHLCV candles
 """
 
-import sys
 from datetime import UTC, datetime, timedelta
 
 import matplotlib.pyplot as plt
@@ -13,10 +12,7 @@ from settings.config import config
 from visuals.candle_plotter import plot_candles
 
 
-def main(product_id: str) -> None:
-    show_plot = True
-    save_plot = False
-
+def main(product_id: str, show_plot: bool, save_plot: bool) -> None:
     end = datetime.now(UTC)
     start = end - timedelta(days=config.candle.candle_history_days)
 
@@ -42,14 +38,3 @@ def main(product_id: str) -> None:
 
     if show_plot:
         plt.show()
-
-
-if __name__ == "__main__":
-    try:
-        product_id = sys.argv[1] if len(sys.argv) > 1 else "BTC-USD"
-        main(product_id)
-    except Exception:
-        import traceback
-
-        traceback.print_exc()
-        input("Press ENTER to exit...")

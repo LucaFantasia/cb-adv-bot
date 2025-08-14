@@ -2,6 +2,7 @@
 backtest_runner.py - Bactests the trading strategy of the bot
 """
 
+import logging
 from datetime import timedelta
 
 import pandas as pd
@@ -17,22 +18,22 @@ from visuals.trend_line_plotter import plot_scored_lines
 
 from .backtest_bootstrap import prepare_backtest_run_dirs
 
-paths = prepare_backtest_run_dirs()
-setup_logging()
-logger = get_logger(__name__)
-
 
 def main() -> None:
+    paths = prepare_backtest_run_dirs()
+    setup_logging()
+    logger = get_logger(__name__)
+
     logger.info("starting backtest", extra=paths)
     for product_id in ["BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD"]:
-        avg_return = backtest(product_id)
+        avg_return = backtest(product_id, logger)
         print(f"\n{product_id} average return: {avg_return}\n")
         config.backtest.base_time = config.backtest.current_time - timedelta(
             days=config.backtest.candle_history_days
         )
 
 
-def backtest(product_id: str) -> float:
+def backtest(product_id: str, logger: logging.Logger) -> float:
     logger = get_logger(__name__)
     client = ProductClient()
     trend_analysis = TrendAnalysis(client, product_id, config.backtest.current_time)
@@ -122,13 +123,3 @@ def backtest(product_id: str) -> float:
     engine.export_trades()
 
     return float(engine.get_avg_return())
-
-
-if __name__ == "__main__":
-    try:
-        main()
-    except Exception:
-        import traceback
-
-        traceback.print_exc()
-        input("Press ENTER to exit...")

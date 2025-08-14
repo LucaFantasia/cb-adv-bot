@@ -13,3 +13,5 @@ Requires-Dist: PyJWT>=2.9
 Requires-Dist: cryptography>=43
 Requires-Dist: mplfinance==0.12.10b0
 Requires-Dist: websocket-client>=1.8
+Requires-Dist: typer>=0.12
+Requires-Dist: rich>=13

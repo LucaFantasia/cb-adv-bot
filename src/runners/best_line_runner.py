@@ -2,8 +2,7 @@
 best_line_runner.py - Visualise the best scored lines
 """
 
-import sys
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 import matplotlib.pyplot as plt
 
@@ -16,10 +15,7 @@ from visuals.line_strength_plotter import (
 )
 
 
-def main(product_id: str, current_time: datetime) -> None:
-    show_plot = True
-    save_plot = False
-
+def main(product_id: str, current_time: datetime | None, show_plot: bool, save_plot: bool) -> None:
     client = ProductClient()
     trend_analysis = TrendAnalysis(client, product_id, current_time)
     trend_analysis.run()
@@ -74,20 +70,3 @@ def main(product_id: str, current_time: datetime) -> None:
 
     if show_plot:
         plt.show()
-
-
-if __name__ == "__main__":
-    timestamp_length = 2
-    try:
-        product_id = sys.argv[1] if len(sys.argv) > 1 else "BTC-USD"
-        current_time = (
-            datetime.strptime(sys.argv[2], "%Y-%m-%d %H:%M:%S %z")
-            if len(sys.argv) > timestamp_length
-            else datetime.now(UTC)
-        )
-        main(product_id, current_time)
-    except Exception:
-        import traceback
-
-        traceback.print_exc()
-        input("Press ENTER to exit...")

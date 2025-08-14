@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from logging.config import dictConfig
 from pathlib import Path
@@ -14,13 +14,17 @@ _LOGGING_STATE = {"configured": False}
 
 @dataclass(frozen=True)
 class LogSettings:
-    level: str = os.getenv("LOG_LEVEL", "INFO").upper()
-    fmt: str = os.getenv("LOG_FORMAT", "json")  # "json" or "plain"
-    file_path: str | None = os.getenv("LOG_FILE")  # e.g. "logs/app.log"
-    file_level: str = os.getenv("LOG_FILE_LEVEL", "INFO").upper()
-    max_bytes: int = int(os.getenv("LOG_MAX_BYTES", str(5 * 1024 * 1024)))
-    backup_count: int = int(os.getenv("LOG_BACKUP_COUNT", "3"))
-    run_tag: str | None = os.getenv("RUN_TAG")  # e.g. backtest id
+    level: str = field(default_factory=lambda: os.getenv("LOG_LEVEL", "INFO").upper())
+    fmt: str = field(default_factory=lambda: os.getenv("LOG_FORMAT", "json"))  # "json" | "plain"
+    file_path: str | None = field(
+        default_factory=lambda: os.getenv("LOG_FILE")
+    )  # e.g. "runs/.../run.log"
+    file_level: str = field(default_factory=lambda: os.getenv("LOG_FILE_LEVEL", "INFO").upper())
+    max_bytes: int = field(
+        default_factory=lambda: int(os.getenv("LOG_MAX_BYTES", str(5 * 1024 * 1024)))
+    )
+    backup_count: int = field(default_factory=lambda: int(os.getenv("LOG_BACKUP_COUNT", "3")))
+    run_tag: str | None = field(default_factory=lambda: os.getenv("RUN_TAG"))
 
 
 class JsonFormatter(logging.Formatter):
