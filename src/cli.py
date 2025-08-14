@@ -31,7 +31,6 @@ class Product(enum.Enum):
     SOL = "SOL-USD"
 
 
-@app.callback()  # type: ignore[misc]
 def _init(
     log_level: Annotated[
         str, typer.Option("--log-level", envvar="LOG_LEVEL", help="Console log level")
@@ -51,7 +50,9 @@ def _init(
     os.environ["LOG_LEVEL"] = log_level
 
 
-@app.command(help="Build candles dataframe and plot/save if requested")  # type: ignore[misc]
+app.callback()(_init)
+
+
 def candles(
     product: Product = Product.BTC,
     show: Annotated[bool, typer.Option("--show/--no-show")] = False,
@@ -60,7 +61,9 @@ def candles(
     candle_run(product.value, bool(show), bool(save))
 
 
-@app.command(help="Detect extrema")  # type: ignore[misc]
+app.command(help="Build candles dataframe and plot/save if requested")(candles)
+
+
 def extrema(
     product: Product = Product.BTC,
     show: Annotated[bool, typer.Option("--show/--no-show")] = False,
@@ -69,7 +72,9 @@ def extrema(
     extrema_run(product.value, bool(show), bool(save))
 
 
-@app.command(help="Trend lines and plot")  # type: ignore[misc]
+app.command(help="Extrema detector")(extrema)
+
+
 def trend_lines(
     product: Product = Product.BTC,
     show: Annotated[bool, typer.Option("--show/--no-show")] = False,
@@ -78,7 +83,9 @@ def trend_lines(
     trend_line_run(product.value, bool(show), bool(save))
 
 
-@app.command(help="Scored lines and plot")  # type: ignore[misc]
+app.command(help="Trend lines and plots")(trend_lines)
+
+
 def scored_lines(
     product: Product = Product.BTC,
     show: Annotated[bool, typer.Option("--show/--no-show")] = False,
@@ -87,7 +94,9 @@ def scored_lines(
     scored_line_run(product.value, bool(show), bool(save))
 
 
-@app.command(help="Plot overlays/metrics for diagnostics")  # type: ignore[misc]
+app.command(help="Scored lines and plots")(scored_lines)
+
+
 def metrics(
     product: Product = Product.BTC,
     show: Annotated[bool, typer.Option("--show/--no-show")] = False,
@@ -96,7 +105,9 @@ def metrics(
     metrics_run(product.value, bool(show), bool(save))
 
 
-@app.command(help="Best line visualizations")  # type: ignore[misc]
+app.command(help="Overlays and diagnostics visualisation")(metrics)
+
+
 def best_line(
     product: Product = Product.BTC,
     current_time: Annotated[
@@ -113,19 +124,28 @@ def best_line(
     )
 
 
-@app.command(help="Backtest current strategy on historical data")  # type: ignore[misc]
+app.command(help="Visualise best lines and scoring")(best_line)
+
+
 def backtest() -> None:
     backtest_run()
 
 
-@app.command(help="Activate the bot for real-time trading")  # type: ignore[misc]
+app.command(help="Backtest current strategy with historical data")(backtest)
+
+
 def activate() -> None:
     main_run()
 
 
-@app.command(help="Special debugging runner")  # type: ignore[misc]
+app.command(help="Activate the bot to trading in real time")(activate)
+
+
 def debug() -> None:
     debug_run()
+
+
+app.command(help="Special debugging runner")(debug)
 
 
 def main() -> None:
