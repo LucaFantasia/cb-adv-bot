@@ -6,14 +6,15 @@ Handles:
 - Time-ranged OHLCV retrieval
 """
 
-import os
 from datetime import datetime, timedelta
 from typing import Any
 
-from .base import BaseClient
+from api.base import BaseClient
+from api.ports import ProductAPI
+from settings.loader import get_config
 
 
-class ProductClient(BaseClient):
+class ProductClient(BaseClient, ProductAPI):
     """
     Handles historical product data access via Coinbase REST API.
     """
@@ -69,9 +70,8 @@ class ProductClient(BaseClient):
         Returns:
             List of OHLCV candle rows (newest first)
         """
-        span = timedelta(
-            seconds=granularity_mins * 60 * self._as_int(os.getenv("MAX_CANDLES_PER_CALL"))
-        )
+        config = get_config()
+        span = timedelta(seconds=granularity_mins * 60 * config.candle.max_candles_per_call)
         cursor = start_time
         all_candles = []
 

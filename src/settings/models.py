@@ -9,6 +9,7 @@ class CandleConfig(BaseModel):
     granularity_str: str = "FIFTEEN_MINUTE"
     granularity_mins: int = 15
     candle_history_days: int = 7
+    max_candles_per_call: int = 350
 
 
 class StrategyConfig(BaseModel):

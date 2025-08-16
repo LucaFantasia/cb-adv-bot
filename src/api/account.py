@@ -7,10 +7,11 @@ Currently supports full account list and USDC-specific balance queries.
 
 from typing import Any
 
-from .base import BaseClient
+from api.base import BaseClient
+from api.ports import AccountAPI
 
 
-class AccountClient(BaseClient):
+class AccountClient(BaseClient, AccountAPI):
     """
     AccountClient — Fetches wallet info and available balances
     """

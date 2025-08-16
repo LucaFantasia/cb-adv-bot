@@ -8,10 +8,11 @@ Currently supports USDC buy limit orders and basic order history.
 import time
 from typing import Any
 
-from .base import BaseClient
+from api.base import BaseClient
+from api.ports import OrderAPI
 
 
-class OrderClient(BaseClient):
+class OrderClient(BaseClient, OrderAPI):
     """
     OrderClient - Places and fetches spot orders (limit buy only)
     """
