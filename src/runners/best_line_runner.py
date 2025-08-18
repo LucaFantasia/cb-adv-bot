@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 
 import matplotlib.pyplot as plt
 
-from api.product import ProductClient
+from container import build_services
 from data.analysis.trend_analysis import TrendAnalysis
-from settings.config import config
+from settings.loader import get_config
 from visuals.line_strength_plotter import (
     plot_line_score_components,
     plot_line_scoring_detections,
@@ -16,8 +16,9 @@ from visuals.line_strength_plotter import (
 
 
 def main(product_id: str, current_time: datetime | None, show_plot: bool, save_plot: bool) -> None:
-    client = ProductClient()
-    trend_analysis = TrendAnalysis(client, product_id, current_time)
+    config = get_config()
+    services = build_services()
+    trend_analysis = TrendAnalysis(services, product_id, current_time)
     trend_analysis.run()
 
     raw_support_lines = [line for line in trend_analysis.raw_lines if line.state == "support"]

@@ -7,7 +7,7 @@ Detects breakouts based on deviation strength and recovery duration.
 import numpy as np
 
 from models.scored_line import ScoredLine
-from settings.config import config
+from settings.loader import get_config
 
 
 def detect_breaks_for_line(
@@ -22,6 +22,8 @@ def detect_breaks_for_line(
 
     Returns an updated ScoredLine with break and soft touch indices.
     """
+    config = get_config()
+
     state = line.line.state
     breaks: list[int] = []
     soft_touches: list[int] = []

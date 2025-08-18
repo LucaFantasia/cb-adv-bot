@@ -6,15 +6,16 @@ from datetime import UTC, datetime, timedelta
 
 import matplotlib.pyplot as plt
 
-from api.product import ProductClient
+from container import build_services
 from data.analysis.trend_analysis import TrendAnalysis
-from settings.config import config
+from settings.loader import get_config
 from visuals.trend_line_plotter import plot_scored_lines
 
 
 def main(product_id: str, show_plot: bool, save_plot: bool) -> None:
-    client = ProductClient()
-    trend_analysis = TrendAnalysis(client, product_id, datetime.now(UTC))
+    config = get_config()
+    services = build_services()
+    trend_analysis = TrendAnalysis(services, product_id, datetime.now(UTC))
     trend_analysis.run()
 
     raw_support_lines = [line for line in trend_analysis.raw_lines if line.state == "support"]

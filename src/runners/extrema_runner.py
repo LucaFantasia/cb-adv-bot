@@ -6,19 +6,20 @@ from datetime import UTC, datetime, timedelta
 
 import matplotlib.pyplot as plt
 
-from api.product import ProductClient
+from container import build_services
 from data.extrema.extrema_detector import find_local_extrema
 from data.structure.candle_loader import candles_to_dataframe
-from settings.config import config
+from settings.loader import get_config
 from visuals.extrema_plotter import plot_extrema
 
 
 def main(product_id: str, show_plot: bool, save_plot: bool) -> None:
+    config = get_config()
+    services = build_services()
     end = datetime.now(UTC)
     start = end - timedelta(days=config.candle.candle_history_days)
 
-    client = ProductClient()
-    candles = client.get_historic_candles(
+    candles = services.product_api.get_historic_candles(
         product_id,
         start_time=start,
         end_time=end,

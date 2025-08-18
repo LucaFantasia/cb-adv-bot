@@ -17,6 +17,7 @@ from runners.main_runner import main as main_run
 from runners.metrics_runner import main as metrics_run
 from runners.scored_line_runner import main as scored_line_run
 from runners.trend_line_runner import main as trend_line_run
+from settings.loader import init_config
 
 app = Typer(help="Coinbase Advanced Bot runners")
 
@@ -47,6 +48,8 @@ def _init(
         os.environ["LOG_FILE_LEVEL"] = log_file_level
 
     os.environ["LOG_LEVEL"] = log_level
+
+    init_config()
 
 
 app.callback()(_init)

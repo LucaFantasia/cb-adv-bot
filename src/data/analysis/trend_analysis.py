@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 
-from api.product import ProductClient
+from container import Services
 from data.extrema.extrema_detector import find_local_extrema
 from data.lines.creation.trend_lines import generate_trend_lines
 from data.lines.detection.break_detector import detect_breaks_for_line
@@ -28,6 +28,7 @@ from data.structure.candle_loader import (
     candles_to_dataframe,
     compute_avg_volatility_pct,
 )
+from settings.loader import get_config
 
 if TYPE_CHECKING:
     from models.scored_line import ScoredLine
@@ -35,18 +36,15 @@ if TYPE_CHECKING:
 
 from typing import Any
 
-from settings.config import config
-
 
 class TrendAnalysis:
     """
     Centralized engine for extracting high-confidence trend lines from historical OHLCV data.
     """
 
-    def __init__(
-        self, product_client: ProductClient, product_id: str, current_time: datetime | None = None
-    ):
-        self.client = product_client
+    def __init__(self, services: Services, product_id: str, current_time: datetime | None = None):
+        self.config = get_config()
+        self.services = services
         self.product_id = product_id
         self.current_time = current_time or datetime.now(UTC)
 
@@ -66,25 +64,25 @@ class TrendAnalysis:
         """
         Executes the full analysis pipeline and populates scored_lines.
         """
-        self.candles = self.client.get_historic_candles(
+        self.candles = self.services.product_api.get_historic_candles(
             self.product_id,
-            self.current_time - timedelta(days=config.candle.candle_history_days),
+            self.current_time - timedelta(days=self.config.candle.candle_history_days),
             self.current_time,
-            config.candle.granularity_mins,
-            config.candle.granularity_str,
+            self.config.candle.granularity_mins,
+            self.config.candle.granularity_str,
         )
         self.df = candles_to_dataframe(self.candles)
         self.avg_volatility_pct = compute_avg_volatility_pct(self.candles)
-        self.deviation_pct = self.avg_volatility_pct / config.strategy.deviation_factor
+        self.deviation_pct = self.avg_volatility_pct / self.config.strategy.deviation_factor
 
         self.maximas, self.minimas = find_local_extrema(
-            self.df, config.strategy.extrema_window_size
+            self.df, self.config.strategy.extrema_window_size
         )
         self.raw_lines = generate_trend_lines(
             self.maximas + self.minimas,
             self.df,
-            config.strategy.max_slope_deg,
-            config.strategy.duration_in_candles,
+            self.config.strategy.max_slope_deg,
+            self.config.strategy.duration_in_candles,
             4 * self.avg_volatility_pct,
         )
 
@@ -116,7 +114,7 @@ class TrendAnalysis:
         ]
 
         self.best_support_lines = select_top_lines(
-            support_lines, num_candles, self.deviation_pct, config.strategy.num_of_top_lines
+            support_lines, num_candles, self.deviation_pct, self.config.strategy.num_of_top_lines
         )
         filtered_resistance_lines = filter_resistance_lines(
             resistance_lines, support_lines, num_candles, self.avg_volatility_pct
@@ -125,6 +123,6 @@ class TrendAnalysis:
             filtered_resistance_lines,
             num_candles,
             self.deviation_pct,
-            config.strategy.num_of_top_lines,
+            self.config.strategy.num_of_top_lines,
         )
         self.best_lines = self.best_support_lines + self.best_resistance_lines

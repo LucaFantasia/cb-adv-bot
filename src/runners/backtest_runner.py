@@ -3,14 +3,15 @@ backtest_runner.py - Bactests the trading strategy of the bot
 """
 
 import logging
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 import pandas as pd
 
-from api.product import ProductClient
+from container import Services, build_services
 from data.analysis.trend_analysis import TrendAnalysis
 from data.structure.candle_loader import candles_to_dataframe
-from settings.config import config
+from settings.loader import get_config, set_backtest_base_time
+from settings.models import Config
 from strategy.backtest_engine import BacktestEngine
 from utils.logging_config import get_logger, setup_logging
 from visuals.trade_plotter import plot_trade_cycle
@@ -23,20 +24,21 @@ def main() -> None:
     paths = prepare_backtest_run_dirs()
     setup_logging()
     logger = get_logger(__name__)
+    config = get_config()
+    services = build_services()
 
     logger.info("starting backtest", extra=paths)
     for product_id in ["BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD"]:
-        avg_return = backtest(product_id, logger)
+        avg_return = backtest(product_id, logger, services, config)
         print(f"\n{product_id} average return: {avg_return}\n")
-        config.backtest.base_time = config.backtest.current_time - timedelta(
-            days=config.backtest.candle_history_days
+        set_backtest_base_time(
+            config.backtest.current_time - timedelta(days=config.backtest.candle_history_days)
         )
 
 
-def backtest(product_id: str, logger: logging.Logger) -> float:
+def backtest(product_id: str, logger: logging.Logger, services: Services, config: Config) -> float:
     logger = get_logger(__name__)
-    client = ProductClient()
-    trend_analysis = TrendAnalysis(client, product_id, config.backtest.current_time)
+    trend_analysis = TrendAnalysis(services, product_id, config.backtest.current_time)
     trend_analysis.run()
     trade_count = 1
     plot_metadata = {"save": True, "show": False, "trade_count": 1, "product_id": product_id}
@@ -46,12 +48,16 @@ def backtest(product_id: str, logger: logging.Logger) -> float:
         trend_analysis.best_lines,
         trend_analysis.avg_volatility_pct / 2,
         trend_analysis.deviation_pct,
-        config.backtest.base_time,
+        (
+            config.backtest.base_time
+            if config.backtest.base_time is not None
+            else datetime.now(UTC)
+        ),  # dummy time
     )
 
     initial_df = trend_analysis.df
     live_df = candles_to_dataframe(
-        client.get_historic_candles(
+        services.product_api.get_historic_candles(
             product_id,
             trend_analysis.current_time,
             trend_analysis.current_time + timedelta(days=config.backtest.run_time_days),
@@ -100,10 +106,10 @@ def backtest(product_id: str, logger: logging.Logger) -> float:
             engine.stop_loss_pct = trend_analysis.avg_volatility_pct / 2
             engine.deviation_pct = trend_analysis.deviation_pct
             engine.trade_logger.start_window = trend_analysis.current_time - timedelta(
-                days=config.candle.candle_history_days
+                days=config.backtest.candle_history_days
             )
-            config.backtest.base_time = trend_analysis.current_time - timedelta(
-                days=config.candle.candle_history_days
+            config = set_backtest_base_time(
+                trend_analysis.current_time - timedelta(days=config.backtest.candle_history_days)
             )
 
         candle = {

@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 from models.scored_line import ScoredLine
-from settings.config import config
+from settings.loader import get_config
 from visuals.plotting_utils import finalise_plot
 
 
@@ -21,6 +21,8 @@ def plot_trade_cycle(
     resistance_line: ScoredLine | None,
     plot_metadata: dict[str, Any],
 ) -> None:
+    config = get_config()
+
     mask = (df.index >= plot_metadata["start_window"]) & (df.index <= plot_metadata["end_window"])
     df_window = df.loc[mask].copy()
     addplots = []

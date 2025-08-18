@@ -1,71 +1,43 @@
 from __future__ import annotations
 
 import json
-from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pydantic import TypeAdapter
+from settings.loader_utils import deep_merge, validate_config
+from settings.models import Config
+from settings.store import store
 
-from .models import Config
-
-
-def _deep_update(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:
-    """Minimal recursive dict merge (values in `patch` win)."""
-    for key, value in patch.items():
-        if key in base and isinstance(base[key], dict) and isinstance(value, dict):
-            base[key] = _deep_update(base[key], value)
-        else:
-            base[key] = value
-    return base
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
-def _config_to_dict(config: Config) -> dict[str, Any]:
-    """Export Pydantic model to plain dict for merging."""
-    return config.model_dump()
-
-
-def _load_json_file(path: str | None) -> dict[str, Any]:
+def _load_json(path: str | None) -> dict[str, Any]:
     if not path:
         return {}
-    oPath = Path(path)
-    if not oPath.exists():
+    p = Path(path)
+    if not p.exists():
         return {}
-    with oPath.open("r", encoding="utf-8") as f:
-        data = json.load(f)
+    data = json.loads(p.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise ValueError("Config JSON must be an object at the root.")
     return data
 
 
-def _validate_config(payload: dict[str, Any]) -> Config:
-    """Validate merged dict using Pydantic (strict typing)."""
-    adapter = TypeAdapter(Config)
-    return adapter.validate_python(payload)
+def init_config(json_path: str | None = None, overrides: dict[str, Any] | None = None) -> Config:
+    merged = deep_merge({}, Config().model_dump())
+    merged = deep_merge(merged, _load_json(json_path))
+    merged = deep_merge(merged, overrides or {})
+    return store.replace(validate_config(merged))
 
 
-@lru_cache(maxsize=1)
-def get_config(*, json_path: str | None = None, overrides: dict[str, Any] | None = None) -> Config:
-    """
-    Returns a cached Config.
-
-    Merge order (later wins):
-      1) defaults (from models)
-      2) JSON file (if provided)
-      3) ad-hoc overrides (dict; useful in tests)
-    """
-    base = _config_to_dict(Config())
-    json_patch = _load_json_file(json_path) if json_path else {}
-    user_patch = overrides or {}
-
-    merged: dict[str, Any] = {}
-    _deep_update(merged, base)
-    _deep_update(merged, json_patch)
-    _deep_update(merged, user_patch)
-
-    return _validate_config(merged)
+def get_config() -> Config:
+    return store.get()
 
 
-def reset_config_cache() -> None:
-    """Clear the cached config (useful in tests to re-evaluate overrides)."""
-    get_config.cache_clear()
+def update_config(patch: dict[str, Any]) -> Config:
+    return store.update(patch)
+
+
+def set_backtest_base_time(time: datetime) -> Config:
+    return update_config({"backtest": {"base_time": time}})

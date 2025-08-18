@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class CandleConfig(BaseModel):
@@ -24,14 +24,21 @@ class StrategyConfig(BaseModel):
     min_touches_scoring: int = 2
     cluster_penalty_distance: int = 50
     steepness_penalty_deg: int = 60
+    max_slope_deg: int = 70
 
 
 class BacktestConfig(BaseModel):
     current_time: datetime = Field(default_factory=lambda: datetime.now(UTC) - timedelta(days=60))
     candle_history_days: int = 7
-    run_time: int = 45
+    run_time_days: int = 45
     product_ids: list[str] = ["BTC-USD", "ETH-USD", "XRP-USD", "SOL-USD"]
-    base_time: datetime = Field(default=current_time - timedelta(days=candle_history_days))
+    base_time: datetime | None = None
+
+    @model_validator(mode="after")
+    def _compute_base_time(self) -> BacktestConfig:
+        if self.base_time is None:
+            self.base_time = self.current_time - timedelta(days=self.candle_history_days)
+        return self
 
 
 class Config(BaseModel):

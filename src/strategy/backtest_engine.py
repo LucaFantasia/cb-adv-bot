@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from models.scored_line import ScoredLine
-from settings.config import config
+from settings.loader import get_config
 from strategy.line_evaluator import (
     calc_sell_price,
     default_exit_price,
@@ -26,6 +26,7 @@ class BacktestEngine:
         deviation_pct: float,
         start_window: datetime,
     ) -> None:
+        self.cfg = get_config()
         self.product_id = product_id
         self.support_lines = [line for line in best_lines if line.current_state == "support"]
         self.resistance_lines = [line for line in best_lines if line.current_state == "resistance"]
@@ -62,7 +63,7 @@ class BacktestEngine:
                     return
 
             if candle["timestamp"] - self.trade_logger.get_latest_trade_ts() >= timedelta(
-                days=config.backtest.candle_history_days
+                days=self.cfg.backtest.candle_history_days
             ):
                 self.logger.info(
                     "No activity, preparing for renalysis...", extra={"product_id": self.product_id}

@@ -6,15 +6,16 @@ from datetime import UTC, datetime, timedelta
 
 import matplotlib.pyplot as plt
 
-from api.product import ProductClient
+from container import build_services
 from data.analysis.trend_analysis import TrendAnalysis
-from settings.config import config
+from settings.loader import get_config
 from visuals.overlays_plotter import plot_trend_line_overlays
 
 
 def main(product_id: str, show_plot: bool, save_plot: bool) -> None:
-    client = ProductClient()
-    trend_analysis = TrendAnalysis(client, product_id, datetime.now(UTC))
+    config = get_config()
+    services = build_services()
+    trend_analysis = TrendAnalysis(services, product_id, datetime.now(UTC))
     trend_analysis.run()
 
     deviation_pct = trend_analysis.avg_volatility_pct / config.strategy.deviation_factor
