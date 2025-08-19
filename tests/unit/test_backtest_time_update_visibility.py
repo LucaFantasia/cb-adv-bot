@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from src.settings.loader import get_config, init_config, set_backtest_base_time
+from settings.loader import get_config, init_config, set_backtest_base_time
 
 
 def test_global_update_seen_by_independent_module_calls() -> None:
