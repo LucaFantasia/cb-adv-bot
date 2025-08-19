@@ -16,7 +16,7 @@ from api.order import OrderClient
 from api.product import ProductClient
 
 if TYPE_CHECKING:
-    from api.ports import AccountAPI, Clock, OrderAPI, ProductAPI, WebsocketAPI
+    from api.ports import AccountAPI, Clock, OrderAPI, ProductAPI, WebSocketAPI
     from api.websocket import WebSocketListener
 
 
@@ -26,7 +26,7 @@ class Services:
     product_api: ProductAPI
     order_api: OrderAPI
     account_api: AccountAPI
-    websocket_api: WebsocketAPI | None
+    websocket_api: WebSocketAPI | None
 
 
 def build_services(websocket_api: WebSocketListener | None = None) -> Services:

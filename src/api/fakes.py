@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, cast
 
-from api.ports import AccountAPI, Clock, OrderAPI, ProductAPI, WebsocketAPI
+from .ports import AccountAPI, Clock, OrderAPI, ProductAPI, WebSocketAPI
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -185,7 +185,7 @@ class FakeAccountAPI(AccountAPI):
 
 
 @dataclass
-class FakeWebsocketAPI(WebsocketAPI):
+class FakeWebSocketAPI(WebSocketAPI):
     """A minimal fake that matches your `WebsocketAPI` protocol.
 
     Features:

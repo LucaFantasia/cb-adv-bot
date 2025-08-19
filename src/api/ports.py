@@ -68,7 +68,7 @@ class AccountAPI(Protocol):
 
 
 @runtime_checkable
-class WebsocketAPI(Protocol):
+class WebSocketAPI(Protocol):
     def stop(self) -> None: ...
 
     def on_open(self, ws: WebSocket) -> None: ...
