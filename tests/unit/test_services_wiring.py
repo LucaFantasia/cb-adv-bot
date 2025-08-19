@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from src.container import build_fake_services
-from src.settings.loader import init_config
+from container import build_fake_services
+from settings.loader import init_config
 
 
 def test_build_services_with_fakes_and_use_ports() -> None:

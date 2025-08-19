@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from src.settings.loader import (
+from settings.loader import (
     get_config,
     init_config,
     set_backtest_base_time,

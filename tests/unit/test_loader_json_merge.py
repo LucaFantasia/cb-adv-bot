@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
-from src.settings.loader import get_config, init_config, update_config
+from settings.loader import get_config, init_config, update_config
 
 if TYPE_CHECKING:
     from pathlib import Path
