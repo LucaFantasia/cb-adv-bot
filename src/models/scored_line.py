@@ -4,7 +4,7 @@ scored_line.py - Stores a trend line and its detection metrics
 
 from dataclasses import dataclass, field
 
-from models.trend_line import TrendLine
+from .trend_line import TrendLine
 
 
 @dataclass(slots=True)

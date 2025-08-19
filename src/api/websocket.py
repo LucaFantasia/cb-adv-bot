@@ -12,12 +12,11 @@ from datetime import UTC, datetime
 
 from websocket import WebSocket, WebSocketApp
 
+from api.ports import WebSocketAPI
 from utils.logging_config import get_logger
 
-from .ports import WebsocketAPI
 
-
-class WebSocketListener(WebsocketAPI):
+class WebSocketListener(WebSocketAPI):
     """
     WebSocketListener - Connects to Coinbase's real-time ticker feed
     """

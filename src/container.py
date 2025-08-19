@@ -10,7 +10,7 @@ from api.fakes import (
     FakeClock,
     FakeOrderAPI,
     FakeProductAPI,
-    FakeWebsocketAPI,
+    FakeWebSocketAPI,
 )
 from api.order import OrderClient
 from api.product import ProductClient
@@ -45,5 +45,5 @@ def build_fake_services() -> Services:
         product_api=FakeProductAPI(),
         order_api=FakeOrderAPI(),
         account_api=FakeAccountAPI(),
-        websocket_api=FakeWebsocketAPI(),
+        websocket_api=FakeWebSocketAPI(),
     )

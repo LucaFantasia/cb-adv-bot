@@ -19,7 +19,7 @@ class StrategyConfig(BaseModel):
         default_factory=lambda: [(5.0, 1), (4.0, 5), (3.0, 10)]
     )
     num_of_top_lines: int = 2
-    deviation_factor: int = 40
+    deviation_factor: float = 40
     min_gap_soft_touches: int = 5
     min_touches_scoring: int = 2
     cluster_penalty_distance: int = 50
