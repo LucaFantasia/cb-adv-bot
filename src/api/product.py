@@ -9,8 +9,11 @@ Handles:
 from datetime import datetime, timedelta
 from typing import Any
 
+from pydantic import ValidationError
+
 from api.base import BaseClient
 from api.ports import ProductAPI
+from api.product_models import Product
 from settings.loader import get_config
 
 
@@ -19,11 +22,21 @@ class ProductClient(BaseClient, ProductAPI):
     Handles historical product data access via Coinbase REST API.
     """
 
-    def get_product(self, product_id: str) -> Any | None:
+    def get_product(self, product_id: str) -> Product | None:
         """
         Retrieve metadata for a specific trading pair (e.g., BTC-USD)
         """
-        return self.get(f"products/{product_id}")
+        raw = self.get(f"products/{product_id}")
+        if not raw:
+            return None
+        try:
+            return Product.model_validate(raw)
+        except ValidationError as error:
+            self.logger.error(
+                "get_product: parse failed",
+                extra={"product_id": product_id, "errors": error.errors()},
+            )
+            return None
 
     def _get_product_candles(
         self, product_id: str, start: datetime, end: datetime, granularity: str
