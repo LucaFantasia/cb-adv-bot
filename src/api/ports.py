@@ -7,6 +7,8 @@ if TYPE_CHECKING:
 
     from websocket import WebSocket
 
+    from api.product_models import Candle, Product
+
 
 @runtime_checkable
 class Clock(Protocol):
@@ -20,7 +22,7 @@ class Clock(Protocol):
 
 @runtime_checkable
 class ProductAPI(Protocol):
-    def get_product(self, product_id: str) -> Any | None:
+    def get_product(self, product_id: str) -> Product | None:
         """Retrieve metadata for a specific trading pair (e.g., BTC-USD)"""
         ...
 
@@ -31,7 +33,7 @@ class ProductAPI(Protocol):
         end_time: datetime,
         granularity_mins: int,
         granularity_str: str,
-    ) -> list[dict[str, Any]]:
+    ) -> list[Candle]:
         """Returns raw candle data"""
         ...
 

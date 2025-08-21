@@ -9,3 +9,12 @@ class Product(BaseModel):
     price_percentage_change_24h: str
     volume_24h: str
     volume_percentage_change_24h: str
+
+
+class Candle(BaseModel):
+    start: str
+    low: str
+    high: str
+    open: str
+    close: str
+    volume: str

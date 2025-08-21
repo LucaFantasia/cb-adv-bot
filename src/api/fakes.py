@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, cast
 
 from .ports import AccountAPI, Clock, OrderAPI, ProductAPI, WebSocketAPI
+from .product_models import Candle, Product
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -38,15 +39,15 @@ class FakeProductAPI(ProductAPI):
         self.candle_calls: list[tuple[str, datetime, datetime, int, str]] = []
         self.product_calls: list[str] = []
 
-    def get_product(self, product_id: str) -> Any | None:
+    def get_product(self, product_id: str) -> Product | None:
         self.product_calls.append(product_id)
-        return {
-            "product_id": "BTC-USD",
-            "price": "140.21",
-            "price_percentage_change_24h": "9.43%",
-            "volume_24h": "1908432",
-            "volume_percentage_change_24h": "9.43%",
-        }
+        return Product(
+            product_id="BTC-USD",
+            price="140.21",
+            price_percentage_change_24h="9.43%",
+            volume_24h="1908432",
+            volume_percentage_change_24h="9.43%",
+        )
 
     def get_historic_candles(
         self,
@@ -55,19 +56,19 @@ class FakeProductAPI(ProductAPI):
         end_time: datetime,
         granularity_mins: int,
         granularity_str: str,
-    ) -> list[dict[str, Any]]:
+    ) -> list[Candle]:
         self.candle_calls.append(
             (product_id, start_time, end_time, granularity_mins, granularity_str)
         )
         return [
-            {
-                "start": "1639508050",
-                "low": "140.21",
-                "high": "140.21",
-                "open": "140.21",
-                "close": "140.21",
-                "volume": "56437345",
-            }
+            Candle(
+                start="1639508050",
+                low="140.21",
+                high="140.21",
+                open="140.21",
+                close="140.21",
+                volume="56457345",
+            )
         ]
 
 

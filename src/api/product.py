@@ -7,14 +7,16 @@ Handles:
 """
 
 from datetime import datetime, timedelta
-from typing import Any
 
 from pydantic import ValidationError
+from pydantic.type_adapter import TypeAdapter
 
 from api.base import BaseClient
 from api.ports import ProductAPI
-from api.product_models import Product
+from api.product_models import Candle, Product
 from settings.loader import get_config
+
+_candles_adapter = TypeAdapter(list[Candle])
 
 
 class ProductClient(BaseClient, ProductAPI):
@@ -40,7 +42,7 @@ class ProductClient(BaseClient, ProductAPI):
 
     def _get_product_candles(
         self, product_id: str, start: datetime, end: datetime, granularity: str
-    ) -> list[dict[str, Any]]:
+    ) -> list[Candle]:
         """
         Basic wrapper for Coinbase candle endpoint (max ~350 bars per request).
 
@@ -59,8 +61,13 @@ class ProductClient(BaseClient, ProductAPI):
             "granularity": granularity,
         }
 
-        result = self.get(f"products/{product_id}/candles", params=params)
-        return result.get("candles", []) if result else []
+        raw = self.get(f"products/{product_id}/candles", params=params)
+        items = raw.get("candles", []) if raw else []
+        try:
+            return _candles_adapter.validate_python(items)
+        except Exception:
+            self.logger.exception("Failed to parse candles", extra={"count": len(items)})
+            return []
 
     def get_historic_candles(
         self,
@@ -69,7 +76,7 @@ class ProductClient(BaseClient, ProductAPI):
         end_time: datetime,
         granularity_mins: int,
         granularity_str: str,
-    ) -> list[dict[str, Any]]:
+    ) -> list[Candle]:
         """
         Returns OHLCV data across multiple API calls if necessary.
 
