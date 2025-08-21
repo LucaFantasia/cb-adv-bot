@@ -62,7 +62,10 @@ class ProductClient(BaseClient, ProductAPI):
         }
 
         raw = self.get(f"products/{product_id}/candles", params=params)
-        items = raw.get("candles", []) if raw else []
+        if raw is None:
+            return []
+
+        items = raw.get("candles", [])
         try:
             return _candles_adapter.validate_python(items)
         except Exception:
