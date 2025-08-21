@@ -6,10 +6,15 @@ Currently supports USDC buy limit orders and basic order history.
 """
 
 import time
-from typing import Any
+
+from pydantic import ValidationError
+from pydantic.type_adapter import TypeAdapter
 
 from api.base import BaseClient
+from api.order_models import Order, OrderReceipt
 from api.ports import OrderAPI
+
+_order_adapter = TypeAdapter(list[Order])
 
 
 class OrderClient(BaseClient, OrderAPI):
@@ -19,7 +24,7 @@ class OrderClient(BaseClient, OrderAPI):
 
     def place_usdc_buy_limit_order(
         self, product_id: str, post_only: bool, limit_price: str, base_size: str
-    ) -> Any | None:
+    ) -> OrderReceipt | None:
         """
         Place a USDC-denominated buy limit order.
 
@@ -40,11 +45,29 @@ class OrderClient(BaseClient, OrderAPI):
             },
         }
 
-        return self.post("orders", body=order_data)
+        raw = self.post("orders", body=order_data)
+        if not raw:
+            return None
+        try:
+            return OrderReceipt.model_validate(raw)
+        except ValidationError as error:
+            self.logger.error(
+                "place_usdc_buy_limit_order: parse failed",
+                extra={"product_id": product_id, "errors": error.errors()},
+            )
+            return None
 
-    def get_orders(self) -> list[dict[str, Any]]:
+    def get_orders(self) -> list[Order]:
         """
         Retrieve historical orders (basic batch query).
         """
-        response = self.get("orders/historical/batch")
-        return response.get("orders", []) if response else []
+        raw = self.get("orders/historical/batch")
+        if raw is None:
+            return []
+
+        items = raw.get("orders", [])
+        try:
+            return _order_adapter.validate_python(items)
+        except Exception:
+            self.logger.error("Failed to parse orders", extra={"count": len(items)})
+            return []

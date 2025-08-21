@@ -7,6 +7,14 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, cast
 
 from .account_models import Account, Balance
+from .order_models import (
+    ErrorResponse,
+    LimitLimitGtc,
+    Order,
+    OrderConfiguration,
+    OrderReceipt,
+    SuccessResponse,
+)
 from .ports import AccountAPI, Clock, OrderAPI, ProductAPI, WebSocketAPI
 from .product_models import Candle, Product
 
@@ -81,65 +89,49 @@ class FakeOrderAPI(OrderAPI):
         self, product_id: str, post_only: bool, limit_price: str, base_size: str
     ) -> Any | None:
         self.placed_buy_orders.append((product_id, post_only, limit_price, base_size))
-        return {
-            "success": True,
-            "success_response": {
-                "order_id": "11111-00000-000000",
-                "product_id": product_id,
-                "side": "BUY",
-                "client_order_id": "0000-00000-000000",
-            },
-            "order_configuration": {
-                "limit_limit_gtc": {
-                    "base_size": base_size,
-                    "limit_price": limit_price,
-                    "post_only": post_only,
-                }
-            },
-        }
+        return OrderReceipt(
+            success=True,
+            success_response=SuccessResponse(
+                order_id="11111-00000-000000",
+                product_id=product_id,
+                side="BUY",
+                client_order_id="0000-00000-000000",
+            ),
+            error_response=ErrorResponse(
+                error="UNKNOWN_FAILURE_REASON",
+                message="The order configuration was invalid",
+                error_details="Market orders cannot be placed with empty order sizes",
+                preview_failure_reason="UNKNOWN_PREVIEW_FAILURE_REASON",
+                new_order_failure_reason="UNKNOWN_FAILURE_REASON",
+            ),
+            order_configuration=OrderConfiguration(
+                limit_limit_gtc=LimitLimitGtc(
+                    quote_size="10.00",
+                    base_size=base_size,
+                    limit_price=limit_price,
+                    post_only=post_only,
+                )
+            ),
+        )
 
-    def get_orders(self) -> list[dict[str, Any]]:
+    def get_orders(self) -> list[Order]:
         return [
-            {
-                "order_id": "0000-000000-000000",
-                "product_id": "BTC-USD",
-                "user_id": "2222-000000-000000",
-                "order_configuration": {
-                    "limit_limit_gtc": {
-                        "quote_size": "10.00",
-                        "base_size": "0.001",
-                        "limit_price": "10000.00",
-                        "post_only": False,
-                    },
-                },
-                "side": "BUY",
-                "client_order_id": "11111-000000-000000",
-                "status": "PENDING",
-                "time_in_force": "UNKNOWN_TIME_IN_FORCE",
-                "created_time": "2021-05-31T09:59:59.000Z",
-                "completion_percentage": "50",
-                "filled_size": "0.001",
-                "average_filled_price": "50",
-                "fee": "<string>",
-                "number_of_fills": "2",
-                "filled_value": "10000",
-                "pending_cancel": True,
-                "size_in_quote": False,
-                "total_fees": "5.00",
-                "size_inclusive_of_fees": False,
-                "total_value_after_fees": "<string>",
-                "trigger_status": "UNKNOWN_TRIGGER_STATUS",
-                "order_type": "UNKNOWN_ORDER_TYPE",
-                "reject_reason": "REJECT_REASON_UNSPECIFIED",
-                "settled": True,
-                "product_type": "UNKNOWN_PRODUCT_TYPE",
-                "reject_message": "<string>",
-                "cancel_message": "<string>",
-                "order_placement_source": "UNKNOWN_PLACEMENT_SOURCE",
-                "outstanding_hold_amount": "<string>",
-                "is_liquidation": True,
-                "last_fill_time": "<string>",
-            }
+            Order(
+                order_id="0000-000000-000000",
+                product_id="BTC-USD",
+                user_id="2222-000000-000000",
+                order_configuration=OrderConfiguration(
+                    limit_limit_gtc=LimitLimitGtc(
+                        quote_size="10.00",
+                        base_size="0.001",
+                        limit_price="10000.00",
+                        post_only=False,
+                    )
+                ),
+                side="BUY",
+                client_order_id="11111-000000-000000",
+                status="PENDING",
+            )
         ]
 
 

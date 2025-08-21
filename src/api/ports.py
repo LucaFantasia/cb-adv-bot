@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from websocket import WebSocket
 
     from api.account_models import Account
+    from api.order_models import Order, OrderReceipt
     from api.product_models import Candle, Product
 
 
@@ -43,14 +44,14 @@ class ProductAPI(Protocol):
 class OrderAPI(Protocol):
     def place_usdc_buy_limit_order(
         self, product_id: str, post_only: bool, limit_price: str, base_size: str
-    ) -> Any | None:
+    ) -> OrderReceipt | None:
         """
         Place a USDC-denominated buy limit order.
         Returns the API response (order status or error).
         """
         ...
 
-    def get_orders(self) -> list[dict[str, Any]]:
+    def get_orders(self) -> list[Order]:
         """Retrieve historical orders (basic batch query)."""
         ...
 
