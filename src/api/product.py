@@ -29,7 +29,7 @@ class ProductClient(BaseClient, ProductAPI):
         Retrieve metadata for a specific trading pair (e.g., BTC-USD)
         """
         raw = self.get(f"products/{product_id}")
-        if not raw:
+        if raw is None:
             return None
         try:
             return Product.model_validate(raw)

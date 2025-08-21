@@ -31,10 +31,9 @@ from data.structure.candle_loader import (
 from settings.loader import get_config
 
 if TYPE_CHECKING:
+    from api.product_models import Candle
     from models.scored_line import ScoredLine
     from models.trend_line import TrendLine
-
-from typing import Any
 
 
 class TrendAnalysis:
@@ -48,7 +47,7 @@ class TrendAnalysis:
         self.product_id = product_id
         self.current_time = current_time or datetime.now(UTC)
 
-        self.candles: list[dict[str, Any]] = []
+        self.candles: list[Candle] = []
         self.df: pd.DataFrame = pd.DataFrame()
         self.avg_volatility_pct: float = 0.0
         self.deviation_pct: float = 0.0

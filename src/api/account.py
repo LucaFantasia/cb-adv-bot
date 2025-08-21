@@ -5,10 +5,13 @@ Handles retrieval of account balances and wallet metadata.
 Currently supports full account list and USDC-specific balance queries.
 """
 
-from typing import Any
+from pydantic.type_adapter import TypeAdapter
 
+from api.account_models import Account
 from api.base import BaseClient
 from api.ports import AccountAPI
+
+_account_adapter = TypeAdapter(list[Account])
 
 
 class AccountClient(BaseClient, AccountAPI):
@@ -16,19 +19,27 @@ class AccountClient(BaseClient, AccountAPI):
     AccountClient — Fetches wallet info and available balances
     """
 
-    def get_accounts(self) -> list[dict[str, Any]]:
+    def get_accounts(self) -> list[Account]:
         """
         Retrieve all trading accounts (one per currency).
         """
-        response = self.get("accounts")
-        return response.get("accounts", []) if response else []
+        raw = self.get("accounts")
+        if raw is None:
+            return []
 
-    def get_account_usdc(self) -> dict[str, Any] | None:
+        items = raw.get("accounts", [])
+        try:
+            return _account_adapter.validate_python(items)
+        except Exception:
+            self.logger.error("Failed to parse accounts", extra={"count": len(items)})
+            return []
+
+    def get_account_usdc(self) -> Account | None:
         """
         Return the account dict associated with the USDC wallet.
         """
         for account in self.get_accounts():
-            if account.get("currency") == "USDC":
+            if account.currency == "USDC":
                 return account
         return None
 
@@ -39,4 +50,4 @@ class AccountClient(BaseClient, AccountAPI):
         account = self.get_account_usdc()
         if not account:
             raise RuntimeError("USDC account not found.")
-        return float(account["available_balance"]["value"])
+        return float(account.available_balance.value)

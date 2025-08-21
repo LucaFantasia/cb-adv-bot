@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 
     from websocket import WebSocket
 
+    from api.account_models import Account
     from api.product_models import Candle, Product
 
 
@@ -56,11 +57,11 @@ class OrderAPI(Protocol):
 
 @runtime_checkable
 class AccountAPI(Protocol):
-    def get_accounts(self) -> list[dict[str, Any]]:
+    def get_accounts(self) -> list[Account]:
         """Retrieve all trading accounts (one per currency)."""
         ...
 
-    def get_account_usdc(self) -> dict[str, Any] | None:
+    def get_account_usdc(self) -> Account | None:
         """Return the account dict associated with the USDC wallet."""
         ...
 

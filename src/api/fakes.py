@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any, cast
 
+from .account_models import Account, Balance
 from .ports import AccountAPI, Clock, OrderAPI, ProductAPI, WebSocketAPI
 from .product_models import Candle, Product
 
@@ -143,43 +144,23 @@ class FakeOrderAPI(OrderAPI):
 
 
 class FakeAccountAPI(AccountAPI):
-    def get_accounts(self) -> list[dict[str, Any]]:
+    def get_accounts(self) -> list[Account]:
         return [
-            {
-                "uuid": "8bfc20d7-f7c6-4422-bf07-8243ca4169fe",
-                "name": "BTC Wallet",
-                "currency": "BTC",
-                "available_balance": {"value": "1.23", "currency": "BTC"},
-                "default": False,
-                "active": True,
-                "created_at": "2021-05-31T09:59:59.000Z",
-                "updated_at": "2021-05-31T09:59:59.000Z",
-                "deleted_at": "2021-05-31T09:59:59.000Z",
-                "type": "FIAT",
-                "ready": True,
-                "hold": {"value": "1.23", "currency": "BTC"},
-                "retail_portfolio_id": "b87a2d3f-8a1e-49b3-a4ea-402d8c389aca",
-                "platform": "ACCOUNT_PLATFORM_CONSUMER",
-            }
+            Account(
+                uuid="8bfc20d7-f7c6-4422-bf07-8243ca4169fe",
+                name="BTC Wallet",
+                currency="BTC",
+                available_balance=Balance(value="1.23", currency="BTC"),
+            )
         ]
 
-    def get_account_usdc(self) -> dict[str, Any] | None:
-        return {
-            "uuid": "8bfc20d7-f7c6-4422-bf07-8243ca4169fe",
-            "name": "USDC Wallet",
-            "currency": "BTC",
-            "available_balance": {"value": "5000.0", "currency": "USDC"},
-            "default": False,
-            "active": True,
-            "created_at": "2021-05-31T09:59:59.000Z",
-            "updated_at": "2021-05-31T09:59:59.000Z",
-            "deleted_at": "2021-05-31T09:59:59.000Z",
-            "type": "FIAT",
-            "ready": True,
-            "hold": {"value": "5000.0", "currency": "USDC"},
-            "retail_portfolio_id": "b87a2d3f-8a1e-49b3-a4ea-402d8c389aca",
-            "platform": "ACCOUNT_PLATFORM_CONSUMER",
-        }
+    def get_account_usdc(self) -> Account | None:
+        return Account(
+            uuid="8bfc20d7-f7c6-4422-bf07-8243ca4169fe",
+            name="BTC Wallet",
+            currency="BTC",
+            available_balance=Balance(value="1.23", currency="BTC"),
+        )
 
     def get_balance_usdc(self) -> float:
         return 5000.0
