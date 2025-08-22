@@ -87,7 +87,7 @@ class FakeOrderAPI(OrderAPI):
 
     def place_usdc_buy_limit_order(
         self, product_id: str, post_only: bool, limit_price: str, base_size: str
-    ) -> Any | None:
+    ) -> OrderReceipt | None:
         self.placed_buy_orders.append((product_id, post_only, limit_price, base_size))
         return OrderReceipt(
             success=True,
@@ -149,9 +149,9 @@ class FakeAccountAPI(AccountAPI):
     def get_account_usdc(self) -> Account | None:
         return Account(
             uuid="8bfc20d7-f7c6-4422-bf07-8243ca4169fe",
-            name="BTC Wallet",
-            currency="BTC",
-            available_balance=Balance(value="1.23", currency="BTC"),
+            name="USDC Wallet",
+            currency="USDC",
+            available_balance=Balance(value="1.23", currency="USDC"),
         )
 
     def get_balance_usdc(self) -> float:
