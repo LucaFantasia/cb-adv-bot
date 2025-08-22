@@ -65,8 +65,23 @@ def generate_trend_lines(
             state = "resistance" if intercept > first_price else "support"
 
             line = TrendLine(
-                slope=slope, intercept=intercept, state=state, start_index=idx1, end_index=idx2
+                slope=float(slope),
+                intercept=float(intercept),
+                state=state,
+                start_index=int(idx1),
+                end_index=int(idx2),
             )
             lines.append(line)
 
-    return lines
+    def key(line: TrendLine) -> tuple[int, int, float, float]:
+        return (line.start_index, line.end_index, round(line.slope, 12), round(line.intercept, 8))
+
+    seen: set[tuple[int, int, float, float]] = set()
+    dedup: list[TrendLine] = []
+    for line in lines:
+        key_val = key(line)
+        if key_val not in seen:
+            seen.add(key_val)
+            dedup.append(line)
+
+    return dedup
