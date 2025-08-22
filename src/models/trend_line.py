@@ -6,6 +6,7 @@ Used to model support and resistance levels, later scored for signal strength.
 """
 
 from dataclasses import dataclass
+from functools import lru_cache
 
 
 @dataclass(frozen=True)
@@ -37,4 +38,9 @@ class TrendLine:
         Returns:
             Projected price as float
         """
-        return self.slope * candle_idx + self.intercept
+        return _project_price_cached(self.slope, self.intercept, candle_idx)
+
+
+@lru_cache(maxsize=65536)
+def _project_price_cached(slope: float, intercept: float, candle_idx: int) -> float:
+    return slope * candle_idx + intercept
