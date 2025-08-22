@@ -51,7 +51,7 @@ class FakeProductAPI(ProductAPI):
     def get_product(self, product_id: str) -> Product | None:
         self.product_calls.append(product_id)
         return Product(
-            product_id="BTC-USD",
+            product_id=product_id,
             price="140.21",
             price_percentage_change_24h="9.43%",
             volume_24h="1908432",
