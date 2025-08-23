@@ -20,66 +20,89 @@ def detect_breaks_for_line(
     """
     Evaluates a single trend line for break points and soft touches.
 
-    Returns an updated ScoredLine with break and soft touch indices.
+
+    Vectorised over segments (runs) to reduce per-candle Python work while
+    preserving the original semantics:
+    - A break candidate starts when price crosses through the line given the current state.
+    - The run continues until price recovers to the opposite side of the line.
+    - For the run, compute max_height (peak thrust) and duration; validate
+    against (factor * deviation_price, min_bars) criteria.
+    - If validated, record a break at the run start and flip state.
+    - Otherwise, record a soft-touch at the peak (declustered by min_gap_soft_touches).
     """
     config = get_config()
+
+    # Make contiguous arrays for performance
+    closes_vect = np.asarray(closes, dtype=np.float32)
+    proj_prices_vect = np.asarray(proj_prices, dtype=np.float32)
+
+    # Precompute directional masks
+    below = closes_vect < proj_prices_vect
+    above = closes_vect > proj_prices_vect
 
     state = line.line.state
     breaks: list[int] = []
     soft_touches: list[int] = []
+
     i = 0
     while i < num_candles:
-        proj_price = proj_prices[i]
-        close = closes[i]
+        if state == "support":
+            # next index where price is below the line (down-break candidate)
+            rel = np.nonzero(below[i:])[0]
+            if rel.size == 0:
+                break
+            start = i + int(rel[0])
 
-        if state == "support" and close < proj_price:
-            new_state = "resistance"
-        elif state == "resistance" and close > proj_price:
-            new_state = "support"
-        else:
-            i += 1
+            # run ends at first index where price goes above the line (recovery)
+            rel_rec = np.nonzero(above[start:])[0]
+            j = start + int(rel_rec[0]) if rel_rec.size else num_candles
+
+            # thrust distance during run (positive for downward thrust)
+            run_dist = proj_prices_vect[start:j] - closes_vect[start:j]
+
+        else:  # state == "resistance"
+            # next index where price is above the line (up-break candidate)
+            rel = np.nonzero(above[i:])[0]
+            if rel.size == 0:
+                break
+            start = i + int(rel[0])
+
+            # run ends at first index where price goes below the line (recovery)
+            rel_rec = np.nonzero(below[start:])[0]
+            j = start + int(rel_rec[0]) if rel_rec.size else num_candles
+
+            # thrust distance during run (positive for upward thrust)
+            run_dist = closes_vect[start:j] - proj_prices_vect[start:j]
+
+        # Compute metrics for this run
+        if run_dist.size == 0:
+            i = start + 1
             continue
 
-        # Break detected - now validate
-        start = i
-        max_height = abs(closes[i] - proj_price)
-        peak = i
-        j = i + 1
+        # duration and peak
+        duration = int(j - start)
+        argmax = int(np.argmax(run_dist))
+        max_height = float(run_dist[argmax])
+        peak = start + argmax
 
-        while j < num_candles:
-            proj_j = proj_prices[j]
-            close_j = closes[j]
-
-            if state == "support" and max_height < proj_j - close_j:
-                max_height = proj_j - close_j
-                peak = j
-            elif state == "resistance" and max_height < close_j - proj_j:
-                max_height = close_j - proj_j
-                peak = j
-
-            recovered = (new_state == "resistance" and close_j > proj_j) or (
-                new_state == "support" and close_j < proj_j
-            )
-            if recovered:
-                break
-
-            j += 1
-
-        duration = j - start
+        # validate against break criteria (first satisfied)
         break_added = False
-
         for factor, min_bars in config.strategy.break_criteria:
-            if max_height >= factor * deviation_price and duration >= min_bars:
+            if (max_height >= factor * deviation_price) and (duration >= min_bars):
                 breaks.append(start)
-                state = new_state
+                # flip state only on actual break
+                state = "resistance" if state == "support" else "support"
                 break_added = True
                 break
 
+        # soft-touch bookkeeping when no break added
         if (not break_added) and (
-            not soft_touches or peak - soft_touches[-1] > config.strategy.min_gap_soft_touches
+            not soft_touches
+            or (peak - soft_touches[-1]) > int(config.strategy.min_gap_soft_touches)
         ):
             soft_touches.append(peak)
 
+        # jump to end of the run (recovery point)
         i = j
 
     return ScoredLine(
