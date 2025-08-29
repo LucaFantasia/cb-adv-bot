@@ -11,6 +11,7 @@ import pandas as pd
 
 from models.scored_line import ScoredLine
 from models.trend_line import TrendLine
+from utils.timer import Timer
 
 
 def detect_touches_for_line(
@@ -36,21 +37,22 @@ def detect_touches_for_line(
     Returns:
         ScoredLine object containing the line and touch points
     """
-    highs = df["High"].values
-    lows = df["Low"].values
-    opens = list((df["Open"].values).astype(float))
-    closes = list((df["Close"].values).astype(float))
-    body_highs = np.maximum(opens, closes)
-    body_lows = np.minimum(opens, closes)
+    with Timer(f"detect_touches_for_line={line.slope} @ {line.intercept}"):
+        highs = df["High"].values
+        lows = df["Low"].values
+        opens = list((df["Open"].values).astype(float))
+        closes = list((df["Close"].values).astype(float))
+        body_highs = np.maximum(opens, closes)
+        body_lows = np.minimum(opens, closes)
 
-    touches = []
-    for type, _, i in extremas:
-        proj_price = proj_prices[i]
+        touches = []
+        for type, _, i in extremas:
+            proj_price = proj_prices[i]
 
-        in_upper = highs[i] + deviation_price >= proj_price >= body_highs[i] - deviation_price
-        in_lower = lows[i] - deviation_price <= proj_price <= body_lows[i] + deviation_price
+            in_upper = highs[i] + deviation_price >= proj_price >= body_highs[i] - deviation_price
+            in_lower = lows[i] - deviation_price <= proj_price <= body_lows[i] + deviation_price
 
-        if (type == "maxima" and in_upper) or (type == "minima" and in_lower):
-            touches.append(i)
+            if (type == "maxima" and in_upper) or (type == "minima" and in_lower):
+                touches.append(i)
 
     return ScoredLine(line=line, touches=touches)

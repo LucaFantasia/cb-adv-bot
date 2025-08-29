@@ -8,6 +8,7 @@ This module handles:
 """
 
 from models.scored_line import ScoredLine
+from utils.timer import Timer
 
 
 def _are_lines_similar(
@@ -81,14 +82,16 @@ def select_top_lines(
     Returns:
         List of distinct, high-scoring trend lines
     """
-    sorted_lines = sorted(lines, key=lambda line: line.score, reverse=True)
+    with Timer("Selecting top lines"):
+        sorted_lines = sorted(lines, key=lambda line: line.score, reverse=True)
 
-    selected: list[ScoredLine] = []
-    for candidate in sorted_lines:
-        if not any(
-            _are_lines_similar(candidate, other, last_index, deviation_pct) for other in selected
-        ):
-            selected.append(candidate)
-        if len(selected) >= max_lines:
-            break
+        selected: list[ScoredLine] = []
+        for candidate in sorted_lines:
+            if not any(
+                _are_lines_similar(candidate, other, last_index, deviation_pct)
+                for other in selected
+            ):
+                selected.append(candidate)
+            if len(selected) >= max_lines:
+                break
     return selected

@@ -17,6 +17,7 @@ import numpy as np
 from models.scored_line import ScoredLine
 from settings.loader import get_config
 from settings.models import Config
+from utils.timer import Timer
 
 
 def _get_section(index: int, q1: int, q2: int, q3: int) -> int:
@@ -82,26 +83,31 @@ def score_line(line: ScoredLine, q1: int, q2: int, q3: int, num_candles: int) ->
     Returns:
         A float score indicating line quality
     """
-    cfg = get_config()
-    touches = line.touches
-    soft_touches = line.soft_touches
-    breaks = line.breaks
-    slope = line.line.slope
-    components = {}
+    with Timer("Scoring line"):
+        cfg = get_config()
+        touches = line.touches
+        soft_touches = line.soft_touches
+        breaks = line.breaks
+        slope = line.line.slope
+        components = {}
 
-    components["touch_score"] = _section_decay_score(touches, [1.0, 0.5, 0.25, 0.125], q1, q2, q3)
-    components["soft_touch_score"] = _section_decay_score(
-        soft_touches, [0.1, 0.05, 0.025, 0.0125], q1, q2, q3
-    )
-    components["break_penalty"] = _section_decay_score(breaks, [-0.5, -1.0, -2.0, -4.0], q1, q2, q3)
-    components["spread_bonus"] = _spread_bonus(touches, num_candles, cfg)
-    components["clustering_penalty"] = _clustering_penalty(touches, cfg)
-    components["recent_penalty"] = _recent_event_penalty(
-        touches + soft_touches + breaks, num_candles
-    )
-    components["break_decay"] = _break_recency_decay(breaks, num_candles)
-    components["steepness_penalty"] = _steepness_penalty(slope, cfg)
+        components["touch_score"] = _section_decay_score(
+            touches, [1.0, 0.5, 0.25, 0.125], q1, q2, q3
+        )
+        components["soft_touch_score"] = _section_decay_score(
+            soft_touches, [0.1, 0.05, 0.025, 0.0125], q1, q2, q3
+        )
+        components["break_penalty"] = _section_decay_score(
+            breaks, [-0.5, -1.0, -2.0, -4.0], q1, q2, q3
+        )
+        components["spread_bonus"] = _spread_bonus(touches, num_candles, cfg)
+        components["clustering_penalty"] = _clustering_penalty(touches, cfg)
+        components["recent_penalty"] = _recent_event_penalty(
+            touches + soft_touches + breaks, num_candles
+        )
+        components["break_decay"] = _break_recency_decay(breaks, num_candles)
+        components["steepness_penalty"] = _steepness_penalty(slope, cfg)
 
-    score = sum(components.values())
-    line.score = score
-    line.score_components = components
+        score = sum(components.values())
+        line.score = score
+        line.score_components = components
