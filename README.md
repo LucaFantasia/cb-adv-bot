@@ -117,8 +117,3 @@ This repository demonstrates end-to-end engineering of a data-driven system:
 - typed data models and strict linting,
 - backtesting and evaluation scaffolding,
 - observability via structured logging and saved artefacts.
-
----
-
-## License
-Add a license if you plan to keep the repository public (MIT is a common choice).
