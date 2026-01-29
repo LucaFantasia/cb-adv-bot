@@ -17,7 +17,7 @@ from api.product import ProductClient
 
 if TYPE_CHECKING:
     from api.ports import AccountAPI, Clock, OrderAPI, ProductAPI, WebSocketAPI
-    from api.websocket import WebSocketListener
+    from api.websocket import CoinbaseWebSocket
 
 
 @dataclass(frozen=True)
@@ -29,7 +29,7 @@ class Services:
     websocket_api: WebSocketAPI | None
 
 
-def build_services(websocket_api: WebSocketListener | None = None) -> Services:
+def build_services(websocket_api: CoinbaseWebSocket | None = None) -> Services:
     return Services(
         clock=SystemClock(),
         product_api=ProductClient(),
