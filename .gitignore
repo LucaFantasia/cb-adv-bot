@@ -3,6 +3,7 @@
 .pytest_cache/
 .env
 .venv/
+cb-adv-bot-venv/
 charts/
 runs/
 artifacts/

@@ -38,9 +38,11 @@ fix = true
 
 [tool.mypy]
 python_version = "3.12"
-warn_unused_configs = true
 strict = true
+warn_unused_configs = true
+disable_error_code = ["import-untyped"]
 plugins = ["pydantic.mypy"]
+
 
 [[tool.mypy.overrides]]
 module = "mplfinance"

@@ -21,7 +21,7 @@ from .product_models import Candle, Product
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from websocket import WebSocket
+    from websocket import WebSocketApp
 
 import queue
 from threading import Event, Thread
@@ -177,7 +177,7 @@ class FakeWebSocketAPI(WebSocketAPI):
     on_ticker: Callable[[datetime, float], None] | None = None
 
     # Internal state
-    _ws: WebSocket | None = None
+    _ws: WebSocketApp | None = None
     _stop_evt: Event = field(default_factory=Event)
     _thread: Thread | None = None
     _q: queue.Queue[str] = field(default_factory=queue.Queue)
@@ -196,11 +196,11 @@ class FakeWebSocketAPI(WebSocketAPI):
             self._thread.join(timeout=2)
         self.closed = True
 
-    def on_open(self, ws: WebSocket) -> None:
+    def on_open(self, ws: WebSocketApp) -> None:
         self.opened = True
         self._ws = ws
 
-    def _on_message(self, ws: WebSocket, raw_message: str) -> None:
+    def _on_message(self, ws: WebSocketApp, raw_message: str) -> None:
         data = self._json_or_none(raw_message)
         if not data:
             return
@@ -258,10 +258,10 @@ class FakeWebSocketAPI(WebSocketAPI):
         except Exception:
             return datetime.now(UTC)
 
-    def on_error(self, ws: WebSocket, err: str) -> None:
+    def on_error(self, ws: WebSocketApp, err: str) -> None:
         self.last_error = str(err)
 
-    def on_close(self, ws: WebSocket, code: int, msg: str) -> None:
+    def on_close(self, ws: WebSocketApp, code: int, msg: str) -> None:
         self.closed = True
         self.last_close = (code, msg)
 
@@ -276,7 +276,7 @@ class FakeWebSocketAPI(WebSocketAPI):
             def send(self, *_args: Any, **_kwargs: Any) -> None:  # pragma: no cover
                 return
 
-        dummy_ws = cast("WebSocket", _DummyWS())
+        dummy_ws = cast("WebSocketApp", _DummyWS())
         self.on_open(dummy_ws)  # mark opened
 
         def _loop() -> None:
